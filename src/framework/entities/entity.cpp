@@ -3,6 +3,14 @@
 
 #include <algorithm>
 
+//constructor
+Entity::Entity() {
+	model.setIdentity(); //identity matrix (at (0,0,0), no rotation, scale 1)
+	visible = true;
+	parent = nullptr;
+	name = "";
+};
+
 void Entity::render(Camera* camera)
 {
 	for (int i = 0; i < children.size(); ++i) {
@@ -51,7 +59,7 @@ void Entity::removeChild(Entity* child)
 Matrix44 Entity::getGlobalMatrix()
 {
 	if (parent)
-		return model * parent->getGlobalMatrix();
+		return parent->getGlobalMatrix() * model;
 	return model;
 }
 

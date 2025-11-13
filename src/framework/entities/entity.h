@@ -3,13 +3,16 @@
 #include "framework/includes.h"
 #include "framework/framework.h"
 
+#include <vector>
+#include <string>
+
 class Camera;
 
 class Entity {
 
 public:
 
-	Entity() {}; 			// Constructor
+	Entity(); 			// Constructor
 	virtual ~Entity() {}; 	// Destructor
 
 	std::string name;
@@ -18,6 +21,8 @@ public:
 
 	Entity* parent = nullptr;
 	std::vector<Entity*> children;
+
+	bool visible = true;
 
 	void addChild(Entity* child);
 	void removeChild(Entity* child);
