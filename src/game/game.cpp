@@ -62,12 +62,12 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	//load texture cubemap
 	skybox->texture = new Texture();
 	std::vector<std::string> faces = {
-		"data/textures/heightmap.png",
-		"data/textures/heightmap.png",
-		"data/textures/heightmap.png",
-		"data/textures/heightmap.png",
-		"data/textures/heightmap.png",
-		"data/textures/heightmap.png"	
+		"data/textures/texture.tga",
+		"data/textures/texture.tga",
+		"data/textures/texture.tga",
+		"data/textures/texture.tga",
+		"data/textures/texture.tga",
+		"data/textures/texture.tga"	
 	};
 	skybox->texture->loadCubemap("skybox_temp", faces);
 
@@ -94,7 +94,7 @@ void Game::render(void)
 	{
 		skybox->render(camera);
 	}
-	
+
 	// Set flags
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
