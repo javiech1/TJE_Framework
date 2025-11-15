@@ -25,7 +25,7 @@ void main()
 
     //final position of vertex on screen
     //convert pos 3D to 2D
-    gl_Position = u_viewprojection * vec4(v_world_position, 1.0);
+    gl_Position = u_viewprojection * vec4(world_position, 1.0);
 
     //set w component to far plane distance 
     //TODO: review why this is needed (AI recommended)
