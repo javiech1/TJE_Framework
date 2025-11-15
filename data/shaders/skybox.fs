@@ -1,6 +1,4 @@
-"""
-process every pixel between vtxs, deciding color
-"""
+// process every pixel between vtxs, deciding color
 
 //direction to look on cubemap
 varying vec3 v_world_position;

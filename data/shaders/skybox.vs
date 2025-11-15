@@ -1,6 +1,4 @@
-"""
-process every vertex of the 3d model
-"""
+// process every vertex of the 3d model
 
 //position of the 3d vertex of the cubemap
 attribute vec3 a_vertex;
