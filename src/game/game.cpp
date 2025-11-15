@@ -6,12 +6,17 @@
 #include "graphics/shader.h"
 #include "framework/input.h"
 
+#include "framework/entities/entity_skybox.h"
+
 #include <cmath>
 
 //some globals
 Mesh* mesh = NULL;
 Texture* texture = NULL;
 Shader* shader = NULL;
+
+EntitySkybox* skybox = NULL;
+
 float angle = 0;
 float mouse_speed = 100.0f;
 
@@ -49,6 +54,23 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	// Example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 
+	//create skybox
+	skybox = new EntitySkybox();
+	skybox->mesh = Mesh::Get("data/meshes/cubemap.ASE");
+	skybox->shader = Shader::Get("data/shaders/skybox.vs", "data/shaders/skybox.fs");
+
+	//load texture cubemap
+	skybox->texture = new Texture();
+	std::vector<std::string> faces = {
+		"data/textures/heightmap.png",
+		"data/textures/heightmap.png",
+		"data/textures/heightmap.png",
+		"data/textures/heightmap.png",
+		"data/textures/heightmap.png",
+		"data/textures/heightmap.png"	
+	};
+	skybox->texture->loadCubemap("skybox_temp", faces);
+
 	// Hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 }
@@ -56,15 +78,23 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 //what to do when the image has to be draw
 void Game::render(void)
 {
+
+	
 	// Set the clear color (the background color)
 	glClearColor(0.0, 0.0, 0.0, 1.0);
-
+	
 	// Clear the window and the depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	
 	// Set the camera as default
 	camera->enable();
-
+	
+	//render skybox first
+	if(skybox)
+	{
+		skybox->render(camera);
+	}
+	
 	// Set flags
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
