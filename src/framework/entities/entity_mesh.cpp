@@ -11,6 +11,10 @@ EntityMesh::EntityMesh() {
     isInstanced = false;
 }
 
+EntityMesh::~EntityMesh() {
+    // dont delete mesh, texture, shader (shared resources)
+}
+
 void EntityMesh::render(Camera* camera) {
     if(!mesh || !shader || !visible) return;
     if(isInstanced) {
