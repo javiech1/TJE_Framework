@@ -76,6 +76,7 @@ CG_SOURCES_APPEND(${DIR_SOURCES}/framework/extra/coldet)
 CG_SOURCES_APPEND(${DIR_SOURCES}/framework/extra/pathfinder)
 CG_SOURCES_APPEND(${DIR_SOURCES}/graphics)
 CG_SOURCES_APPEND(${DIR_SOURCES}/game)
+CG_SOURCES_APPEND(${DIR_SOURCES}/game/stages)
 
 add_executable(${PROJECT_NAME} ${CG_SOURCES})
 

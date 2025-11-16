@@ -5,8 +5,8 @@
 #include "graphics/fbo.h"
 #include "graphics/shader.h"
 #include "framework/input.h"
-
 #include "framework/entities/entity_skybox.h"
+#include "game/stages/play_stage.h"
 
 #include <cmath>
 
@@ -71,15 +71,16 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	};
 	skybox->texture->loadCubemap("skybox_temp", faces);
 
+	//set init stage
+	setStage(new PlayStage());
+
 	// Hide the cursor
 	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
 }
 
 //what to do when the image has to be draw
 void Game::render(void)
-{
-
-	
+{	
 	// Set the clear color (the background color)
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	
@@ -88,7 +89,12 @@ void Game::render(void)
 	
 	// Set the camera as default
 	camera->enable();
-	
+
+	//set the current stage	
+	if(current_stage){
+		current_stage->render(camera);
+	}
+/*
 	//render skybox first
 	if(skybox)
 	{
@@ -125,7 +131,7 @@ void Game::render(void)
 
 	// Draw the floor grid
 	drawGrid();
-
+*/
 	// Render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
 
@@ -135,6 +141,12 @@ void Game::render(void)
 
 void Game::update(double seconds_elapsed)
 {
+
+	if(current_stage){
+		current_stage->update(seconds_elapsed);
+	}
+	/*
+
 	float speed = seconds_elapsed * mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
 
 	// Example
@@ -153,6 +165,7 @@ void Game::update(double seconds_elapsed)
 	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN)) camera->move(Vector3(0.0f, 0.0f,-1.0f) * speed);
 	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT)) camera->move(Vector3(1.0f, 0.0f, 0.0f) * speed);
 	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera->move(Vector3(-1.0f,0.0f, 0.0f) * speed);
+*/
 }
 
 //Keyboard event handler (sync input)
@@ -163,11 +176,19 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
 		case SDLK_F1: Shader::ReloadAll(); break; 
 	}
+
+	//delegate to stage
+	if(current_stage){
+		current_stage->onKeyDown(event);
+	}
 }
 
 void Game::onKeyUp(SDL_KeyboardEvent event)
 {
-
+	//delegate to stage
+	if(current_stage){
+		current_stage->onKeyUp(event);
+	}
 }
 
 void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
@@ -216,4 +237,19 @@ void Game::setMouseLocked(bool must_lock)
 	SDL_SetRelativeMouseMode((SDL_bool)must_lock);
 
 	mouse_locked = must_lock;
+}
+
+void Game::onMouseMove(SDL_MouseMotionEvent event)
+{
+	//delegate to stage
+	if(current_stage){
+		current_stage->onMouseMove(event);
+	}
+}
+
+void Game::setStage(Stage* new_stage)
+{
+	if(current_stage)
+		delete current_stage;
+	current_stage = new_stage;
 }
