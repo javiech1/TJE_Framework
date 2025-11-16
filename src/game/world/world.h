@@ -1,0 +1,24 @@
+#pragma once
+
+#include "framework/camera.h"
+#include "framework/input.h"
+#include <vector>
+
+class Entity;
+
+class World
+{
+    public:
+        World();
+        ~World();
+
+        void render(Camera* camera);
+        void update(float delta_time);
+
+        void onKeyDown(SDL_KeyboardEvent event);
+        void onKeyUp(SDL_KeyboardEvent event);
+        void onMouseMove(SDL_MouseMotionEvent event);
+
+    private:
+        std::vector<Entity*> entities;
+};

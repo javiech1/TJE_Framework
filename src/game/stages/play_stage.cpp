@@ -1,5 +1,5 @@
 #include "play_stage.h"
-#include "world.h"
+#include "game/world/world.h"
 #include "framework/utils.h"
 
 PlayStage::PlayStage()

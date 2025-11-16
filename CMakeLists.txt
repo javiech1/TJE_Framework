@@ -77,6 +77,7 @@ CG_SOURCES_APPEND(${DIR_SOURCES}/framework/extra/pathfinder)
 CG_SOURCES_APPEND(${DIR_SOURCES}/graphics)
 CG_SOURCES_APPEND(${DIR_SOURCES}/game)
 CG_SOURCES_APPEND(${DIR_SOURCES}/game/stages)
+CG_SOURCES_APPEND(${DIR_SOURCES}/game/world)
 
 add_executable(${PROJECT_NAME} ${CG_SOURCES})
 
