@@ -24,6 +24,7 @@ void EntityMesh::render(Camera* camera) {
     shader->enable();
     shader->setUniform("u_model", model);
     shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+    shader->setUniform("u_color", Vector4(1.0f, 1.0f, 1.0f, 1.0f)); // default tint
     if(texture) {
         shader->setUniform("u_texture", texture);
     }
@@ -38,6 +39,7 @@ void EntityMesh::renderInstanced(Camera* camera) {
     if(!mesh || !shader || !visible || models.empty()) return;
     shader->enable();
     shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+    shader->setUniform("u_color", Vector4(1.0f, 1.0f, 1.0f, 1.0f)); // default tint
     if(texture) {
         shader->setUniform("u_texture", texture);
     }

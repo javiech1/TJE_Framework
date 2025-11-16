@@ -4,6 +4,7 @@
 #include "graphics/mesh.h"
 #include "graphics/texture.h"
 #include "graphics/shader.h"
+#include "game/entities/entity_player.h"
 
 World::World()
 {
@@ -25,6 +26,14 @@ World::World()
     skybox->texture->loadCubemap("skybox_temp", faces);
 
     entities.push_back(skybox);
+
+    //create player entity
+    EntityPlayer* player = new EntityPlayer();
+    player->mesh = Mesh::Get("data/meshes/box.ASE");
+    player->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+    player->texture = Texture::Get("data/textures/texture.tga");
+    player->model.setTranslation( Vector3(0,5,0) );
+    entities.push_back(player);
 }
 
 World::~World()
