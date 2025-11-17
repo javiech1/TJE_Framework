@@ -40,8 +40,8 @@ void EntityPlayer::handleInput(float delta_time)
 
     if (forward) direction += Vector3(0,0,1);
     if (backward) direction += Vector3(0,0,-1);
-    if (left) direction += Vector3(-1,0,0);
-    if (right) direction += Vector3(1,0,0);
+    if (left) direction += Vector3(1,0,0);
+    if (right) direction += Vector3(-1,0,0);
     if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && is_grounded)
     {
         velocity.y = jump_force;

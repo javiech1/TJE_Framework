@@ -39,6 +39,9 @@ void Input::init(SDL_Window* _window)
 
 void Input::update()
 {
+	//make sure the keyboard state is up-to-date before reading it
+	SDL_PumpEvents();
+
 	//read keyboard state and stored in keystate
 	memcpy((void*)&Input::prev_keystate, Input::keystate, SDL_NUM_SCANCODES);
 	Input::keystate = SDL_GetKeyboardState(NULL);
