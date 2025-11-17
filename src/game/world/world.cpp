@@ -32,8 +32,8 @@ World::World()
     player->mesh = Mesh::Get("data/meshes/box.ASE");
     player->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     player->texture = Texture::Get("data/textures/texture.tga");
-    player->model.setTranslation( Vector3(0,5,0) );
     player->setScale(5.0f); // Hacer el cubo 5 veces más grande
+    player->setPosition(Vector3(0,5,0));
 
     entities.push_back(player);
 }

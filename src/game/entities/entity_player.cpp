@@ -7,8 +7,10 @@ EntityPlayer::EntityPlayer() : EntityMesh()
     jump_force = 15.0f;
     is_grounded = false;
     velocity = Vector3(0,0,0);
+    position = Vector3(0,0,0);
     camera = nullptr;
     player_scale = 1.0f;
+    rebuildModelMatrix();
 }
 
 EntityPlayer::~EntityPlayer()
@@ -58,9 +60,6 @@ void EntityPlayer::applyPhysics(float delta_time)
     // Apply gravity
     velocity.y -= 9.81f * delta_time;
 
-    // Get current position before updating
-    Vector3 position = model.getTranslation();
-
     // Update position based on velocity
     position += velocity * delta_time;
 
@@ -75,18 +74,28 @@ void EntityPlayer::applyPhysics(float delta_time)
         is_grounded = false;
     }
 
-    // Rebuild the transformation matrix: scale first, then translate so translation stays unscaled
-    model.setIdentity();
-    model.scale(player_scale, player_scale, player_scale);
-    model.translate(position);
+    rebuildModelMatrix();
 }
 
 void EntityPlayer::setScale(float scale)
 {
     player_scale = scale;
-    // Rebuild matrix with new scale respecting translation
-    Vector3 position = model.getTranslation();
+    rebuildModelMatrix();
+}
+
+void EntityPlayer::setPosition(const Vector3& new_position)
+{
+    position = new_position;
+    rebuildModelMatrix();
+}
+
+void EntityPlayer::rebuildModelMatrix()
+{
     model.setIdentity();
-    model.scale(scale, scale, scale);
-    model.translate(position);
+    model.m[0] = player_scale;
+    model.m[5] = player_scale;
+    model.m[10] = player_scale;
+    model.m[12] = position.x;
+    model.m[13] = position.y;
+    model.m[14] = position.z;
 }
