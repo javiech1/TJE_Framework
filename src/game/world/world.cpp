@@ -8,8 +8,8 @@
 
 World::World()
 {
-    //create skybox entity
-    EntitySkybox* skybox = new EntitySkybox();
+    //create skybox entity - TEMPORALMENTE COMENTADO PARA DEBUG
+    /*EntitySkybox* skybox = new EntitySkybox();
 
     skybox->mesh = Mesh::Get("data/meshes/cubemap.ASE");
     skybox->shader = Shader::Get("data/shaders/skybox.vs", "data/shaders/skybox.fs");
@@ -21,11 +21,11 @@ World::World()
         "data/textures/texture.tga",
         "data/textures/texture.tga",
         "data/textures/texture.tga",
-        "data/textures/texture.tga"    
+        "data/textures/texture.tga"
     };
     skybox->texture->loadCubemap("skybox_temp", faces);
 
-    entities.push_back(skybox);
+    entities.push_back(skybox);*/
 
     //create player entity
     EntityPlayer* player = new EntityPlayer();
@@ -33,6 +33,8 @@ World::World()
     player->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     player->texture = Texture::Get("data/textures/texture.tga");
     player->model.setTranslation( Vector3(0,5,0) );
+    player->setScale(5.0f); // Hacer el cubo 5 veces más grande
+
     entities.push_back(player);
 }
 

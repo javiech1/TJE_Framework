@@ -8,11 +8,17 @@ EntityPlayer::EntityPlayer() : EntityMesh()
     is_grounded = false;
     velocity = Vector3(0,0,0);
     camera = nullptr;
+    player_scale = 1.0f;
 }
 
 EntityPlayer::~EntityPlayer()
 {
 
+}
+
+void EntityPlayer::render(Camera* camera)
+{
+    EntityMesh::render(camera);
 }
 
 void EntityPlayer::update(float delta_time)
@@ -52,18 +58,35 @@ void EntityPlayer::applyPhysics(float delta_time)
     // Apply gravity
     velocity.y -= 9.81f * delta_time;
 
-    // Update position
-    model.translate(velocity * delta_time);
+    // Get current position before updating
+    Vector3 position = model.getTranslation();
+
+    // Update position based on velocity
+    position += velocity * delta_time;
 
     // Simple ground collision
-    Vector3 position = model.getTranslation();
-    if(position.y <= 0) { //y position
-        position.y = 0;
-        model.setTranslation(position.x, position.y, position.z);
+    float ground_y = player_scale * 0.5f; // El centro del cubo debe estar a media altura sobre el suelo
+
+    if(position.y <= ground_y) {
+        position.y = ground_y;
         velocity.y = 0;
         is_grounded = true;
-
     } else {
         is_grounded = false;
     }
+
+    // Rebuild the transformation matrix: scale first, then translate so translation stays unscaled
+    model.setIdentity();
+    model.scale(player_scale, player_scale, player_scale);
+    model.translate(position);
+}
+
+void EntityPlayer::setScale(float scale)
+{
+    player_scale = scale;
+    // Rebuild matrix with new scale respecting translation
+    Vector3 position = model.getTranslation();
+    model.setIdentity();
+    model.scale(scale, scale, scale);
+    model.translate(position);
 }

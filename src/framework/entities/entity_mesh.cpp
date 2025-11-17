@@ -3,6 +3,7 @@
 #include "graphics/texture.h"
 #include "graphics/shader.h"
 #include "framework/camera.h"
+#include "game/game.h"
 
 EntityMesh::EntityMesh() {
     mesh = nullptr;
@@ -25,8 +26,9 @@ void EntityMesh::render(Camera* camera) {
     shader->setUniform("u_model", model);
     shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
     shader->setUniform("u_color", Vector4(1.0f, 1.0f, 1.0f, 1.0f)); // default tint
+    shader->setUniform("u_time", Game::instance->time);
     if(texture) {
-        shader->setUniform("u_texture", texture);
+        shader->setUniform("u_texture", texture, 0);
     }
     mesh->render(GL_TRIANGLES);
     shader->disable();
