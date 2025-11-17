@@ -33,10 +33,15 @@ void EntityPlayer::handleInput(float delta_time)
 {
 
     Vector3 direction = Vector3(0,0,0);
-    if (Input::isKeyPressed(SDL_SCANCODE_W)) direction += Vector3(0,0,1);
-    if (Input::isKeyPressed(SDL_SCANCODE_S)) direction += Vector3(0,0,-1);
-    if (Input::isKeyPressed(SDL_SCANCODE_A)) direction += Vector3(-1,0,0);
-    if (Input::isKeyPressed(SDL_SCANCODE_D)) direction += Vector3(1,0,0);
+    bool forward = Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP);
+    bool backward = Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN);
+    bool left = Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT);
+    bool right = Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT);
+
+    if (forward) direction += Vector3(0,0,1);
+    if (backward) direction += Vector3(0,0,-1);
+    if (left) direction += Vector3(-1,0,0);
+    if (right) direction += Vector3(1,0,0);
     if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && is_grounded)
     {
         velocity.y = jump_force;
