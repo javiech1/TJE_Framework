@@ -8,7 +8,7 @@
 
 World::World()
 {
-    //create skybox entity - TEMPORALMENTE COMENTADO PARA DEBUG
+    //create skybox entity
     /*EntitySkybox* skybox = new EntitySkybox();
 
     skybox->mesh = Mesh::Get("data/meshes/cubemap.ASE");
@@ -34,6 +34,7 @@ World::World()
     player->texture = Texture::Get("data/textures/texture.tga");
     player->setScale(5.0f); // Hacer el cubo 5 veces más grande
     player->setPosition(Vector3(0,5,0));
+    this->player = player;
 
     entities.push_back(player);
 }
@@ -73,4 +74,7 @@ void World::onKeyUp(SDL_KeyboardEvent event)
 void World::onMouseMove(SDL_MouseMotionEvent event)
 {
 
+}
+Vector3 World::getPlayerPosition() const {
+    return player ? player->getPosition() : Vector3();
 }

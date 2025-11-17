@@ -5,6 +5,7 @@
 #include <vector>
 
 class Entity;
+class EntityPlayer;
 
 class World
 {
@@ -18,7 +19,9 @@ class World
         void onKeyDown(SDL_KeyboardEvent event);
         void onKeyUp(SDL_KeyboardEvent event);
         void onMouseMove(SDL_MouseMotionEvent event);
+        Vector3 getPlayerPosition() const;
 
     private:
         std::vector<Entity*> entities;
+        EntityPlayer* player = nullptr;
 };

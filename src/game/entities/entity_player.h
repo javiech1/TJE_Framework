@@ -25,5 +25,6 @@ class EntityPlayer : public EntityMesh {
         void applyPhysics(float delta_time);
         void setScale(float scale);
         void setPosition(const Vector3& new_position);
+        Vector3 getPosition() const { return position; }
 
 };
