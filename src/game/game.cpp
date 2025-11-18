@@ -140,8 +140,8 @@ void Game::update(double seconds_elapsed)
 	else
 		planar_forward.normalize();
 
-	float follow_distance = 10.0f;
-	float vertical_offset = 4.0f;
+	float follow_distance = 8.0f;
+	float vertical_offset = 3.5f;
 	Vector3 desired_eye = player_center - planar_forward * follow_distance + Vector3(0, vertical_offset, 0);
 	camera->lookAt(desired_eye, player_center, Vector3(0.0f,1.0f,0.0f));
 
