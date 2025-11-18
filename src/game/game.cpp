@@ -36,10 +36,13 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	time = 0.0f;
 	elapsed_time = 0.0f;
 	mouse_locked = false;
-	camera_distance = 6.0f;
-	camera_yaw = float(M_PI);   // start behind player looking towards origin
-	camera_pitch = -0.3f;       // slight downward tilt
-	camera_height_offset = 1.0f;
+
+	camera_state.distance = 6.0f;
+	camera_state.yaw = float(M_PI);
+	camera_state.pitch = -0.3f;
+	camera_state.height_offset = 1.0f;
+	camera_state.eye = Vector3(0.0f, 2.0f, -6.0f);
+	camera_state.focus = Vector3(0.0f, 1.0f, 0.0f);
 
 	// OpenGL flags
 	glDisable( GL_CULL_FACE ); //TEMPORALMENTE DESACTIVADO PARA DEBUG
@@ -120,22 +123,22 @@ void Game::update(double seconds_elapsed)
 	const float mouse_sensitivity = 0.004f;
 	if (Input::isMousePressed(SDL_BUTTON_LEFT) || mouse_locked)
 	{
-		camera_yaw   -= Input::mouse_delta.x * mouse_sensitivity;
-		camera_pitch -= Input::mouse_delta.y * mouse_sensitivity;
+		camera_state.yaw   -= Input::mouse_delta.x * mouse_sensitivity;
+		camera_state.pitch -= Input::mouse_delta.y * mouse_sensitivity;
 	}
 
 	const float rotate_speed = float(seconds_elapsed) * 1.5f;
-	if (Input::isKeyPressed(SDL_SCANCODE_LEFT)) camera_yaw += rotate_speed;
-	if (Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera_yaw -= rotate_speed;
-	if (Input::isKeyPressed(SDL_SCANCODE_UP)) camera_pitch += rotate_speed;
-	if (Input::isKeyPressed(SDL_SCANCODE_DOWN)) camera_pitch -= rotate_speed;
+	if (Input::isKeyPressed(SDL_SCANCODE_LEFT)) camera_state.yaw += rotate_speed;
+	if (Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera_state.yaw -= rotate_speed;
+	if (Input::isKeyPressed(SDL_SCANCODE_UP)) camera_state.pitch += rotate_speed;
+	if (Input::isKeyPressed(SDL_SCANCODE_DOWN)) camera_state.pitch -= rotate_speed;
 
-	camera_pitch = std::max(-1.2f, std::min(0.4f, camera_pitch));
+	camera_state.pitch = std::max(-1.2f, std::min(0.4f, camera_state.pitch));
 
 	if (Input::isKeyPressed(SDL_SCANCODE_PAGEUP))
-		camera_distance = std::max(3.0f, camera_distance - float(seconds_elapsed) * 5.0f);
+		camera_state.distance = std::max(3.0f, camera_state.distance - float(seconds_elapsed) * 5.0f);
 	if (Input::isKeyPressed(SDL_SCANCODE_PAGEDOWN))
-		camera_distance = std::min(20.0f, camera_distance + float(seconds_elapsed) * 5.0f);
+		camera_state.distance = std::min(20.0f, camera_state.distance + float(seconds_elapsed) * 5.0f);
 
 	Vector3 player_pos = Vector3();
 	float player_scale = 1.0f;
@@ -148,21 +151,9 @@ void Game::update(double seconds_elapsed)
 		}
 	}
 	player_scale = std::max(0.001f, player_scale);
-	camera_distance = std::max(camera_distance, player_scale * 2.0f);
+	camera_state.distance = std::max(camera_state.distance, player_scale * 2.0f);
 
-	Vector3 player_focus = player_pos + Vector3(0.0f, player_scale * 0.5f, 0.0f);
-
-	Vector3 offset;
-	offset.x = std::cos(camera_pitch) * std::sin(camera_yaw);
-	offset.y = std::sin(camera_pitch);
-	offset.z = std::cos(camera_pitch) * std::cos(camera_yaw);
-	if (offset.length() < 0.001f)
-		offset = Vector3(0.0f, 0.0f, 1.0f);
-	else
-		offset.normalize();
-
-	Vector3 eye = player_focus - offset * camera_distance + Vector3(0.0f, camera_height_offset + player_scale * 0.5f, 0.0f);
-	camera->lookAt(eye, player_focus, Vector3(0.0f,1.0f,0.0f));
+	updateThirdPersonCamera(player, float(seconds_elapsed));
 
 }
 
@@ -250,4 +241,31 @@ void Game::setStage(Stage* new_stage)
 	if(current_stage)
 		delete current_stage;
 	current_stage = new_stage;
+}
+
+void Game::updateThirdPersonCamera(EntityPlayer* player, float dt)
+{
+
+	if(!player) return;
+
+	Vector3 player_pos = player ? player->getPosition() : Vector3();
+	float player_scale = player ? player->getScale() : 1.0f;
+	Vector3 target = player_pos + Vector3(0.0f, player_scale * 0.5f, 0.0f);
+
+	Vector3 offset;
+	offset.x = std::cos(camera_state.pitch) * std::sin(camera_state.yaw);
+	offset.y = std::sin(camera_state.pitch);
+	offset.z = std::cos(camera_state.pitch) * std::cos(camera_state.yaw);
+
+	if(offset.length() < 0.001f)
+		offset = Vector3(0.0f, 0.0f, 1.0f);
+	offset.normalize();
+
+	Vector3 desired_eye = target - offset * camera_state.distance + Vector3(0.0f, camera_state.height_offset + player_scale * 0.5f, 0.0f);
+
+	const float smooth = std::min(1.0f, dt * 5.0f);
+	camera_state.eye = lerp(camera_state.eye, desired_eye, smooth);
+	camera_state.focus = lerp(camera_state.focus, target, smooth);
+
+	camera->lookAt(camera_state.eye, camera_state.focus, Vector3(0.0f, 1.0f, 0.0f));
 }

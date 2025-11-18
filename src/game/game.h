@@ -9,50 +9,60 @@
 #include "framework/utils.h"
 #include "game/stages/stage.h"
 
+struct ThirdPersonCameraState 
+{
+	float yaw, pitch;
+	float distance;
+	float height_offset;
+	Vector3 eye;
+	Vector3 focus;
+};
+
 class Game
 {
-public:
-	static Game* instance;
-	
-	Stage* current_stage = nullptr;
+	public:
+		static Game* instance;
+		
+		Stage* current_stage = nullptr;
 
-	//window
-	SDL_Window* window;
-	int window_width;
-	int window_height;
+		ThirdPersonCameraState camera_state;
 
-	//some globals
-	long frame;
-    float time;
-	float elapsed_time;
-	int fps;
-	bool must_exit;
+		//window
+		SDL_Window* window;
+		int window_width;
+		int window_height;
 
-	//some vars
-	Camera* camera; //our global camera
-	bool mouse_locked; //tells if the mouse is locked (not seen)
-	float camera_distance;
-	float camera_yaw;
-	float camera_pitch;
-	float camera_height_offset;
+		//some globals
+		long frame;
+		float time;
+		float elapsed_time;
+		int fps;
+		bool must_exit;
 
-	Game( int window_width, int window_height, SDL_Window* window );
+		//some vars
+		Camera* camera; //our global camera
+		bool mouse_locked; //tells if the mouse is locked (not seen)
 
-	//main functions
-	void render( void );
-	void update( double dt );
+		Game( int window_width, int window_height, SDL_Window* window );
 
-	void setMouseLocked(bool must_lock);
+		//main functions
+		void render( void );
+		void update( double dt );
 
-	//events
-	void onKeyDown( SDL_KeyboardEvent event );
-	void onKeyUp(SDL_KeyboardEvent event);
-	void onMouseButtonDown( SDL_MouseButtonEvent event );
-	void onMouseButtonUp(SDL_MouseButtonEvent event);
-	void onMouseWheel(SDL_MouseWheelEvent event);
-	void onGamepadButtonDown(SDL_JoyButtonEvent event);
-	void onGamepadButtonUp(SDL_JoyButtonEvent event);
-	void onResize(int width, int height);
-	void onMouseMove(SDL_MouseMotionEvent event);
-	void setStage(Stage* new_stage);
+		void setMouseLocked(bool must_lock);
+
+		//events
+		void onKeyDown( SDL_KeyboardEvent event );
+		void onKeyUp(SDL_KeyboardEvent event);
+		void onMouseButtonDown( SDL_MouseButtonEvent event );
+		void onMouseButtonUp(SDL_MouseButtonEvent event);
+		void onMouseWheel(SDL_MouseWheelEvent event);
+		void onGamepadButtonDown(SDL_JoyButtonEvent event);
+		void onGamepadButtonUp(SDL_JoyButtonEvent event);
+		void onResize(int width, int height);
+		void onMouseMove(SDL_MouseMotionEvent event);
+		void setStage(Stage* new_stage);
+
+	private:
+		void updateThirdPersonCamera(EntityPlayer* player, float dt);
 };
