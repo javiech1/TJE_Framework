@@ -52,8 +52,8 @@ void EntityPlayer::handleInput(float delta_time)
 
     if (moveForward) move_dir += forward;
     if (moveBackward) move_dir -= forward;
-    if (moveLeft) move_dir -= right;
-    if (moveRight) move_dir += right;
+    if (moveLeft) move_dir += right;
+    if (moveRight) move_dir -= right;
     if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && is_grounded)
     {
         velocity.y = jump_force;

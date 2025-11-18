@@ -36,7 +36,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	time = 0.0f;
 	elapsed_time = 0.0f;
 	mouse_locked = false;
-	camera_distance = 1.0f;
+	camera_distance = 6.0f;
 	camera_yaw = float(M_PI);   // start behind player looking towards origin
 	camera_pitch = -0.3f;       // slight downward tilt
 	camera_height_offset = 1.0f;
