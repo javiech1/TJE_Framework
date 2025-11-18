@@ -17,8 +17,7 @@ class PlayStage : public Stage
         void onKeyUp(SDL_KeyboardEvent event) override;
         void onMouseMove(SDL_MouseMotionEvent event) override;
 
-        Vector3 getPlayerPosition() const;
-        float getPlayerScale() const;
+        EntityPlayer* getPlayer() const override;
     
     private:
         World* world = nullptr;

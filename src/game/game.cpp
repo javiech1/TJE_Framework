@@ -137,10 +137,19 @@ void Game::update(double seconds_elapsed)
 	if (Input::isKeyPressed(SDL_SCANCODE_PAGEDOWN))
 		camera_distance = std::min(20.0f, camera_distance + float(seconds_elapsed) * 5.0f);
 
-	Vector3 player_pos = current_stage ? current_stage->getPlayerPosition() : Vector3();
-	float player_scale = current_stage ? current_stage->getPlayerScale() : 1.0f;
-	if (player_scale < 0.001f) player_scale = 1.0f;
+	Vector3 player_pos = Vector3();
+	float player_scale = 1.0f;
+	EntityPlayer* player = nullptr;
+	if (current_stage) {
+		player = current_stage->getPlayer();
+		if (player) {
+			player_pos = player->getPosition();
+			player_scale = player->getScale();
+		}
+	}
+	player_scale = std::max(0.001f, player_scale);
 	camera_distance = std::max(camera_distance, player_scale * 2.0f);
+
 	Vector3 player_focus = player_pos + Vector3(0.0f, player_scale * 0.5f, 0.0f);
 
 	Vector3 offset;

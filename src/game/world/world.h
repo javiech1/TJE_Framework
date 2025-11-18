@@ -6,6 +6,7 @@
 
 class Entity;
 class EntityPlayer;
+class Camera;
 
 class World
 {
@@ -21,6 +22,7 @@ class World
         void onMouseMove(SDL_MouseMotionEvent event);
         Vector3 getPlayerPosition() const;
         float getPlayerScale() const;
+        EntityPlayer* getPlayer() const { return player; }
 
     private:
         std::vector<Entity*> entities;

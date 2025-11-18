@@ -2,6 +2,7 @@
 
 #include "framework/camera.h"
 #include "framework/input.h"
+#include "game/entities/entity_player.h"
 
 class Stage
 {
@@ -14,6 +15,5 @@ public:
     virtual void onKeyDown(SDL_KeyboardEvent event) = 0;
     virtual void onKeyUp(SDL_KeyboardEvent event) = 0;
     virtual void onMouseMove(SDL_MouseMotionEvent event) = 0;
-    virtual Vector3 getPlayerPosition() const = 0;
-    virtual float getPlayerScale() const = 0;
+    virtual EntityPlayer* getPlayer() const = 0;
 };
