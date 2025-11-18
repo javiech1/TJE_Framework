@@ -12,9 +12,9 @@ World::World()
     player->mesh = Mesh::Get("data/meshes/box.ASE");
     player->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     player->texture = Texture::Get("data/textures/texture.tga");
-    const float scale = 3.0f;
-    player->setScale(scale); // Hacer el cubo 3 veces más grande
-    player->setPosition(Vector3(0,scale * 0.5f,0));
+    const float scale = 0.01f;
+    player->setScale(scale);
+    player->setPosition(Vector3(0.0f, scale * 0.5f, 0.0f));
     this->player = player;
 
     entities.push_back(player);

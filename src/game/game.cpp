@@ -36,9 +36,9 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	time = 0.0f;
 	elapsed_time = 0.0f;
 	mouse_locked = false;
-	camera_distance = 8.0f;
-	camera_yaw = 0.0f;
-	camera_pitch = -0.3f;
+	camera_distance = 1.0f;
+	camera_yaw = float(M_PI);   // start behind player looking towards origin
+	camera_pitch = -0.3f;       // slight downward tilt
 	camera_height_offset = 1.0f;
 
 	// OpenGL flags
@@ -139,16 +139,21 @@ void Game::update(double seconds_elapsed)
 
 	Vector3 player_pos = current_stage ? current_stage->getPlayerPosition() : Vector3();
 	float player_scale = current_stage ? current_stage->getPlayerScale() : 1.0f;
-	Vector3 player_center = player_pos + Vector3(0.0f, player_scale * 0.5f + camera_height_offset, 0.0f);
+	if (player_scale < 0.001f) player_scale = 1.0f;
+	camera_distance = std::max(camera_distance, player_scale * 2.0f);
+	Vector3 player_focus = player_pos + Vector3(0.0f, player_scale * 0.5f, 0.0f);
 
 	Vector3 offset;
 	offset.x = std::cos(camera_pitch) * std::sin(camera_yaw);
 	offset.y = std::sin(camera_pitch);
 	offset.z = std::cos(camera_pitch) * std::cos(camera_yaw);
-	offset.normalize();
+	if (offset.length() < 0.001f)
+		offset = Vector3(0.0f, 0.0f, 1.0f);
+	else
+		offset.normalize();
 
-	Vector3 eye = player_center - offset * camera_distance;
-	camera->lookAt(eye, player_center, Vector3(0.0f,1.0f,0.0f));
+	Vector3 eye = player_focus - offset * camera_distance + Vector3(0.0f, camera_height_offset + player_scale * 0.5f, 0.0f);
+	camera->lookAt(eye, player_focus, Vector3(0.0f,1.0f,0.0f));
 
 }
 

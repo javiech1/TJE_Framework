@@ -44,5 +44,5 @@ Vector3 PlayStage::getPlayerPosition() const
 
 float PlayStage::getPlayerScale() const
 {
-    return world->getPlayerScale();
+    return world ? world->getPlayerScale() : 1.0f;
 }
