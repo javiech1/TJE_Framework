@@ -1,6 +1,5 @@
 #include "game/world/world.h"
 #include "framework/entities/entity.h"
-#include "framework/entities/entity_skybox.h"
 #include "graphics/mesh.h"
 #include "graphics/texture.h"
 #include "graphics/shader.h"
@@ -8,25 +7,6 @@
 
 World::World()
 {
-    //create skybox entity
-    /*EntitySkybox* skybox = new EntitySkybox();
-
-    skybox->mesh = Mesh::Get("data/meshes/cubemap.ASE");
-    skybox->shader = Shader::Get("data/shaders/skybox.vs", "data/shaders/skybox.fs");
-
-    skybox->texture = new Texture();
-    std::vector<std::string> faces = {
-        "data/textures/texture.tga",
-        "data/textures/texture.tga",
-        "data/textures/texture.tga",
-        "data/textures/texture.tga",
-        "data/textures/texture.tga",
-        "data/textures/texture.tga"
-    };
-    skybox->texture->loadCubemap("skybox_temp", faces);
-
-    entities.push_back(skybox);*/
-
     //create player entity
     EntityPlayer* player = new EntityPlayer();
     player->mesh = Mesh::Get("data/meshes/box.ASE");

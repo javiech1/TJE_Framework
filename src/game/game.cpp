@@ -97,44 +97,6 @@ void Game::render(void)
 
 	// Draw the floor grid - DEBUG
 	drawGrid();
-/*
-	//render skybox first
-	if(skybox)
-	{
-		skybox->render(camera);
-	}
-
-	// Set flags
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-   
-	// Create model matrix for cube
-	Matrix44 m;
-	m.rotate(angle*DEG2RAD, Vector3(0.0f, 1.0f, 0.0f));
-
-	if(shader)
-	{
-		// Enable shader
-		shader->enable();
-
-		// Upload uniforms
-		shader->setUniform("u_color", Vector4(1,1,1,1));
-		shader->setUniform("u_viewprojection", camera->viewprojection_matrix );
-		shader->setUniform("u_texture", texture, 0);
-		shader->setUniform("u_model", m);
-		shader->setUniform("u_time", time);
-
-		// Do the draw call
-		mesh->render( GL_TRIANGLES );
-
-		// Disable shader
-		shader->disable();
-	}
-
-	// Draw the floor grid
-	drawGrid();
-*/
 	// Render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
 
@@ -178,8 +140,8 @@ void Game::update(double seconds_elapsed)
 	else
 		planar_forward.normalize();
 
-	float follow_distance = 15.0f;
-	float vertical_offset = 6.0f;
+	float follow_distance = 10.0f;
+	float vertical_offset = 4.0f;
 	Vector3 desired_eye = player_center - planar_forward * follow_distance + Vector3(0, vertical_offset, 0);
 	camera->lookAt(desired_eye, player_center, Vector3(0.0f,1.0f,0.0f));
 

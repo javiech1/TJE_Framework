@@ -1,5 +1,6 @@
 #include "entity_player.h"
 #include "framework/input.h"
+#include "game/game.h"
 
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
@@ -8,7 +9,6 @@ EntityPlayer::EntityPlayer() : EntityMesh()
     is_grounded = false;
     velocity = Vector3(0,0,0);
     position = Vector3(0,0,0);
-    camera = nullptr;
     player_scale = 1.0f;
     rebuildModelMatrix();
 }
@@ -32,27 +32,39 @@ void EntityPlayer::update(float delta_time)
 void EntityPlayer::handleInput(float delta_time)
 {
 
-    Vector3 direction = Vector3(0,0,0);
-    bool forward = Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP);
-    bool backward = Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN);
-    bool left = Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT);
-    bool right = Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT);
+    Camera* camera = Game::instance ? Game::instance->camera : nullptr;
+    Vector3 forward = camera ? (camera->center - camera->eye) : Vector3(0.0f, 0.0f, 1.0f);
+    forward.y = 0.0f;
+    if (forward.length() < 0.001f)
+        forward = Vector3(0.0f, 0.0f, 1.0f);
+    forward.normalize();
 
-    if (forward) direction += Vector3(0,0,1);
-    if (backward) direction += Vector3(0,0,-1);
-    if (left) direction += Vector3(1,0,0);
-    if (right) direction += Vector3(-1,0,0);
+    Vector3 right = Vector3(0.0f, 1.0f, 0.0f).cross(forward);
+    if (right.length() < 0.001f)
+        right = Vector3(1.0f, 0.0f, 0.0f);
+    right.normalize();
+
+    Vector3 move_dir = Vector3(0,0,0);
+    bool moveForward = Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP);
+    bool moveBackward = Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN);
+    bool moveLeft = Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT);
+    bool moveRight = Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT);
+
+    if (moveForward) move_dir += forward;
+    if (moveBackward) move_dir -= forward;
+    if (moveLeft) move_dir -= right;
+    if (moveRight) move_dir += right;
     if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && is_grounded)
     {
         velocity.y = jump_force;
         is_grounded = false;
     }
 
-    if (direction.length() > 0)
+    if (move_dir.length() > 0)
     {
-        direction.normalize();
-        velocity.x = direction.x * speed;
-        velocity.z = direction.z * speed;
+        move_dir.normalize();
+        velocity.x = move_dir.x * speed;
+        velocity.z = move_dir.z * speed;
     } else
     {
         velocity.x = 0;

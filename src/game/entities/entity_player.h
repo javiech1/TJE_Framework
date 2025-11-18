@@ -10,7 +10,6 @@ class EntityPlayer : public EntityMesh {
         float speed;
         float jump_force;
         bool is_grounded;
-        Camera* camera;
         float player_scale;
         void rebuildModelMatrix();
 
