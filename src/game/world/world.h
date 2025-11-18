@@ -20,6 +20,7 @@ class World
         void onKeyUp(SDL_KeyboardEvent event);
         void onMouseMove(SDL_MouseMotionEvent event);
         Vector3 getPlayerPosition() const;
+        float getPlayerScale() const;
 
     private:
         std::vector<Entity*> entities;

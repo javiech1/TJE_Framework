@@ -36,3 +36,13 @@ void PlayStage::onMouseMove(SDL_MouseMotionEvent event)
 {
     world->onMouseMove(event);
 }
+
+Vector3 PlayStage::getPlayerPosition() const
+{
+    return world->getPlayerPosition();
+}
+
+float PlayStage::getPlayerScale() const
+{
+    return world->getPlayerScale();
+}

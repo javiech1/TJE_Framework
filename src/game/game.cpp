@@ -165,6 +165,24 @@ void Game::update(double seconds_elapsed)
 	if (Input::isKeyPressed(SDL_SCANCODE_DOWN)) camera->move(Vector3(0.0f, 0.0f,-1.0f) * speed);
 	if (Input::isKeyPressed(SDL_SCANCODE_LEFT)) camera->move(Vector3(1.0f, 0.0f, 0.0f) * speed);
 	if (Input::isKeyPressed(SDL_SCANCODE_RIGHT)) camera->move(Vector3(-1.0f,0.0f, 0.0f) * speed);
+
+	Vector3 player_pos = current_stage ? current_stage->getPlayerPosition() : Vector3();
+
+	Vector3 player_center = player_pos + Vector3(0, current_stage->getPlayerScale() * 0.5f, 0.0f);
+	Vector3 forward = camera->center - camera->eye;
+	forward.normalize();
+
+	Vector3 planar_forward(forward.x, 0.0f, forward.z);
+	if(planar_forward.length() < 0.001f)
+		planar_forward = Vector3(0.0f, 0.0f, 1.0f);
+	else
+		planar_forward.normalize();
+
+	float follow_distance = 15.0f;
+	float vertical_offset = 6.0f;
+	Vector3 desired_eye = player_center - planar_forward * follow_distance + Vector3(0, vertical_offset, 0);
+	camera->lookAt(desired_eye, player_center, Vector3(0.0f,1.0f,0.0f));
+
 }
 
 //Keyboard event handler (sync input)

@@ -26,5 +26,6 @@ class EntityPlayer : public EntityMesh {
         void setScale(float scale);
         void setPosition(const Vector3& new_position);
         Vector3 getPosition() const { return position; }
+        float getScale() const { return player_scale; }
 
 };

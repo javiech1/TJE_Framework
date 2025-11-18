@@ -32,8 +32,8 @@ World::World()
     player->mesh = Mesh::Get("data/meshes/box.ASE");
     player->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     player->texture = Texture::Get("data/textures/texture.tga");
-    player->setScale(5.0f); // Hacer el cubo 5 veces más grande
-    player->setPosition(Vector3(0,5,0));
+    player->setScale(1.0f); // Hacer el cubo 5 veces más grande
+    player->setPosition(Vector3(0,player->getScale() * 0.5f,0));
     this->player = player;
 
     entities.push_back(player);
@@ -77,4 +77,8 @@ void World::onMouseMove(SDL_MouseMotionEvent event)
 }
 Vector3 World::getPlayerPosition() const {
     return player ? player->getPosition() : Vector3();
+}
+
+float World::getPlayerScale() const {
+    return player ? player->getScale() : 1.0f;
 }
