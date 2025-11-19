@@ -7,7 +7,7 @@
 class Entity;
 class EntityPlayer;
 class Camera;
-
+class EntityOrb;
 class World
 {
     public:
@@ -26,5 +26,7 @@ class World
 
     private:
         std::vector<Entity*> entities;
+        std::vector<EntityOrb*> orbs;
         EntityPlayer* player = nullptr;
+        int orbs_collected = 0;
 };

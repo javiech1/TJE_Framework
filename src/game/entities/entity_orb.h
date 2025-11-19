@@ -17,4 +17,6 @@ class EntityOrb : public EntityMesh {
         bool getIsCollected() const { return isCollected; }
         void collect() { isCollected = true; }
 
+        void setPosition(const Vector3& pos);
+
 };
