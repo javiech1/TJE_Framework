@@ -1,6 +1,7 @@
 #include "entity_player.h"
 #include "framework/input.h"
 #include "game/game.h"
+#include "game/entities/entity_platform.h"
 
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
@@ -92,6 +93,9 @@ void EntityPlayer::applyPhysics(float delta_time)
     }
 
     rebuildModelMatrix();
+
+    //player-platform collision
+
 }
 
 void EntityPlayer::setScale(float scale)

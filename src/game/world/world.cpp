@@ -4,6 +4,7 @@
 #include "graphics/texture.h"
 #include "graphics/shader.h"
 #include "game/entities/entity_player.h"
+#include "game/entities/entity_platform.h"
 
 World::World()
 {
@@ -16,8 +17,16 @@ World::World()
     player->setScale(scale);
     player->setPosition(Vector3(0.0f, scale * 0.5f, 0.0f));
     this->player = player;
-
     entities.push_back(player);
+
+    //create platform entity
+    EntityPlatform* platform = new EntityPlatform();
+    platform->mesh = Mesh::Get("data/meshes/box.ASE");
+    platform->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+    platform->texture = Texture::Get("data/textures/texture.tga");
+    platform->setScale(5.0f);
+    platform->setPosition(Vector3(0.0f, 0.0f, 0.0f));
+    entities.push_back(platform);
 }
 
 World::~World()
