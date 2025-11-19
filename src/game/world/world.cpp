@@ -17,7 +17,8 @@ World::World()
     player->texture = Texture::Get("data/textures/texture.tga");
     const float scale = 0.01f;
     player->setScale(scale);
-    player->setPosition(Vector3(0.0f, scale * 0.5f, 0.0f));
+    // Start player above the platform so it falls down
+    player->setPosition(Vector3(0.0f, 5.0f, 0.0f));
     this->player = player;
     entities.push_back(player);
 }
@@ -91,9 +92,10 @@ void World::initTutorial() {
     //create platform
     EntityPlatform* platform_ground = new EntityPlatform();
     platform_ground->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform_ground->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-    platform_ground->texture = Texture::Get("data/textures/texture.tga");
-    platform_ground->setScale(Vector3(20.0f, 0.001f, 20.0f));
+    platform_ground->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
+    platform_ground->texture = nullptr;  // No texture, using solid color
+    platform_ground->color = Vector4(0.2f, 0.4f, 0.8f, 1.0f);  // Blue color
+    platform_ground->setScale(Vector3(20.0f, 0.5f, 20.0f));
     platform_ground->setPosition(Vector3(0.0f, 0.0f, 0.0f));
     entities.push_back(platform_ground);
 /*

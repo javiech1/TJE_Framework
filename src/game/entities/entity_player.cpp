@@ -81,21 +81,10 @@ void EntityPlayer::applyPhysics(float delta_time)
     // Update position based on velocity
     position += velocity * delta_time;
 
-    // Simple ground collision
-    float ground_y = player_scale * 0.5f; // El centro del cubo debe estar a media altura sobre el suelo
-
-    if(position.y <= ground_y) {
-        position.y = ground_y;
-        velocity.y = 0;
-        is_grounded = true;
-    } else {
-        is_grounded = false;
-    }
+    // Reset grounded state (will be set by checkCollisions if on platform)
+    is_grounded = false;
 
     rebuildModelMatrix();
-
-    //player-platform collision
-
 }
 
 void EntityPlayer::setScale(float scale)

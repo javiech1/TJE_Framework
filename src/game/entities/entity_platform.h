@@ -8,6 +8,7 @@ class EntityPlatform : public EntityMesh {
         Vector3 half_size;
 
     public:
+        Vector4 color;  // Color for rendering with flat shader
 
         EntityPlatform();
         virtual ~EntityPlatform();
