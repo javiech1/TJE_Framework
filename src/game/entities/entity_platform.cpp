@@ -22,19 +22,23 @@ void EntityPlatform::update(float delta_time)
     //for moving platforms, if needed
 }
 
-void EntityPlatform::setScale(float scale)
+void EntityPlatform::setScale(Vector3 dimensions)
 {
-    half_size = Vector3(scale * 0.5f, scale * 0.5f, scale * 0.5f);
+    half_size = dimensions * 0.5f;
 
     Vector3 position = model.getTranslation();
 
     model.setIdentity();
-    model.m[0] = scale;
-    model.m[5] = scale;
-    model.m[10] = scale;
-    
-    model.setTranslation(position);
+    model.m[0] = dimensions.x;
+    model.m[5] = dimensions.y;
+    model.m[10] = dimensions.z;
+
+    // Set translation directly without calling setTranslation (which would reset the matrix)
+    model.m[12] = position.x;
+    model.m[13] = position.y;
+    model.m[14] = position.z;
 }
+
 
 void EntityPlatform::setPosition(const Vector3& new_position)
 {

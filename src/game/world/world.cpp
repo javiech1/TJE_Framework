@@ -93,17 +93,17 @@ void World::initTutorial() {
     platform_ground->mesh = Mesh::Get("data/meshes/box.ASE");
     platform_ground->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     platform_ground->texture = Texture::Get("data/textures/texture.tga");
-    platform_ground->setScale(20.0f);
+    platform_ground->setScale(Vector3(20.0f, 0.001f, 20.0f));
     platform_ground->setPosition(Vector3(0.0f, 0.0f, 0.0f));
     entities.push_back(platform_ground);
-
+/*
     EntityPlatform* platform_stair1 = new EntityPlatform();
     platform_stair1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform_stair1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     platform_stair1->texture = Texture::Get("data/textures/texture.tga");
     platform_stair1->setScale(5.0f);
     platform_stair1->setPosition(Vector3(5.0f, 2.0f, 0.0f));
-    entities.push_back(platform_stair1);
+    //entities.push_back(platform_stair1);
 
     EntityPlatform* platform_stair2 = new EntityPlatform();
     platform_stair2->mesh = Mesh::Get("data/meshes/box.ASE");
@@ -111,19 +111,17 @@ void World::initTutorial() {
     platform_stair2->texture = Texture::Get("data/textures/texture.tga");
     platform_stair2->setScale(5.0f);
     platform_stair2->setPosition(Vector3(10.0f, 4.0f, 0.0f));
-    entities.push_back(platform_stair2);
+    //entities.push_back(platform_stair2);
 
     //create orbs
     for (int i = 0; i < 3; i++) {
         EntityOrb* orb = new EntityOrb();
         orb->setPosition(Vector3((i - 1) * 2.0f, 1.0f, 0.0f));
-        entities.push_back(orb);
-        orbs.push_back(orb);
+        //entities.push_back(orb);
+        //orbs.push_back(orb);
     }
-    orbs[0]->setPosition(Vector3(0.0f, 1.0f, 0.0f));
-    orbs[1]->setPosition(Vector3(5.0f, 5.0f, 0.0f));
-    orbs[2]->setPosition(Vector3(10.0f, 7.0f, 0.0f));
-
-
-
+    //orbs[0]->setPosition(Vector3(0.0f, 1.0f, 0.0f));
+    //orbs[1]->setPosition(Vector3(5.0f, 5.0f, 0.0f));
+    //orbs[2]->setPosition(Vector3(10.0f, 7.0f, 0.0f));
+    */
 }
