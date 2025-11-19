@@ -16,4 +16,5 @@ class EntityPlatform : public EntityMesh {
         virtual void update(float delta_time) override;
         void setScale(float scale);
         void setPosition(const Vector3& new_position);
+        Vector3 getHalfSize() const { return half_size; }
 };

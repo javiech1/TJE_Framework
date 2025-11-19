@@ -5,6 +5,7 @@
 PlayStage::PlayStage()
 {
     world = new World();
+    world->initTutorial();
 }
 
 PlayStage::~PlayStage()

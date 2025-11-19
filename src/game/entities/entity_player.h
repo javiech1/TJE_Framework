@@ -26,5 +26,6 @@ class EntityPlayer : public EntityMesh {
         void setPosition(const Vector3& new_position);
         Vector3 getPosition() const { return position; }
         float getScale() const { return player_scale; }
+        void checkCollisions(const std::vector<Entity*>& entities);
 
 };

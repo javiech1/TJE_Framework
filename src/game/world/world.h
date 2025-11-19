@@ -24,6 +24,8 @@ class World
         float getPlayerScale() const;
         EntityPlayer* getPlayer() const { return player; }
 
+        void initTutorial(); //nivel tutorial
+
     private:
         std::vector<Entity*> entities;
         std::vector<EntityOrb*> orbs;

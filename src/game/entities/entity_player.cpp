@@ -120,3 +120,39 @@ void EntityPlayer::rebuildModelMatrix()
     model.m[13] = position.y;
     model.m[14] = position.z;
 }
+
+void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
+{
+    Vector3 player_center = position;
+    //player is a cube for now
+    float player_half_width = player_scale * 0.5f;
+    float player_half_height = player_scale * 0.5f;
+
+
+    //check platforms
+    for(Entity* entity : entities) {
+        EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
+        if(!platform) continue;
+
+        Vector3 platform_center = platform->model.getTranslation();
+        Vector3 platform_half_size = platform->getHalfSize();
+
+        //check collision X and Z;
+        bool collisionX = abs(player_center.x - platform_center.x) < (player_half_width + platform_half_size.x);
+        bool collisionZ = abs(player_center.z - platform_center.z) < (player_half_width + platform_half_size.z);
+
+        if(collisionX && collisionZ) {
+            //if horizantal alignment, check Y
+            float distY = player_center.y - platform_center.y;
+            float limitY = player_half_height + platform_half_size.y;
+
+            //if just on top
+            if(distY > 0 && distY < limitY && velocity.y <= 0) {
+                //snap to platform top
+                position.y = platform_center.y + limitY;
+                velocity.y = 0;
+                is_grounded = true;
+            }
+        }
+    }
+}

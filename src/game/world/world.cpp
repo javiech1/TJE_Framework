@@ -20,23 +20,6 @@ World::World()
     player->setPosition(Vector3(0.0f, scale * 0.5f, 0.0f));
     this->player = player;
     entities.push_back(player);
-
-    //create platform entity
-    EntityPlatform* platform = new EntityPlatform();
-    platform->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-    platform->texture = Texture::Get("data/textures/texture.tga");
-    platform->setScale(5.0f);
-    platform->setPosition(Vector3(0.0f, 0.0f, 0.0f));
-    entities.push_back(platform);
-
-    //create some orbs
-    for (int i = 0; i < 3; i++) {
-        EntityOrb* orb = new EntityOrb();
-        orb->setPosition(Vector3(i * 2.0f -2.0f, 1.0f, 0.0f));
-        entities.push_back(orb);
-        orbs.push_back(orb);
-    }
 }
 
 World::~World()
@@ -77,6 +60,8 @@ void World::update(float delta_time)
             }
         }
     }
+    //check player collisions
+    player->checkCollisions(entities);
 }
 
 void World::onKeyDown(SDL_KeyboardEvent event)
@@ -100,4 +85,45 @@ Vector3 World::getPlayerPosition() const {
 
 float World::getPlayerScale() const {
     return player ? player->getScale() : 1.0f;
+}
+
+void World::initTutorial() {
+    //create platform
+    EntityPlatform* platform_ground = new EntityPlatform();
+    platform_ground->mesh = Mesh::Get("data/meshes/box.ASE");
+    platform_ground->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+    platform_ground->texture = Texture::Get("data/textures/texture.tga");
+    platform_ground->setScale(20.0f);
+    platform_ground->setPosition(Vector3(0.0f, 0.0f, 0.0f));
+    entities.push_back(platform_ground);
+
+    EntityPlatform* platform_stair1 = new EntityPlatform();
+    platform_stair1->mesh = Mesh::Get("data/meshes/box.ASE");
+    platform_stair1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+    platform_stair1->texture = Texture::Get("data/textures/texture.tga");
+    platform_stair1->setScale(5.0f);
+    platform_stair1->setPosition(Vector3(5.0f, 2.0f, 0.0f));
+    entities.push_back(platform_stair1);
+
+    EntityPlatform* platform_stair2 = new EntityPlatform();
+    platform_stair2->mesh = Mesh::Get("data/meshes/box.ASE");
+    platform_stair2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+    platform_stair2->texture = Texture::Get("data/textures/texture.tga");
+    platform_stair2->setScale(5.0f);
+    platform_stair2->setPosition(Vector3(10.0f, 4.0f, 0.0f));
+    entities.push_back(platform_stair2);
+
+    //create orbs
+    for (int i = 0; i < 3; i++) {
+        EntityOrb* orb = new EntityOrb();
+        orb->setPosition(Vector3((i - 1) * 2.0f, 1.0f, 0.0f));
+        entities.push_back(orb);
+        orbs.push_back(orb);
+    }
+    orbs[0]->setPosition(Vector3(0.0f, 1.0f, 0.0f));
+    orbs[1]->setPosition(Vector3(5.0f, 5.0f, 0.0f));
+    orbs[2]->setPosition(Vector3(10.0f, 7.0f, 0.0f));
+
+
+
 }

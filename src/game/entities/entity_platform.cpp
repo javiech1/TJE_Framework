@@ -25,13 +25,15 @@ void EntityPlatform::update(float delta_time)
 void EntityPlatform::setScale(float scale)
 {
     half_size = Vector3(scale * 0.5f, scale * 0.5f, scale * 0.5f);
+
+    Vector3 position = model.getTranslation();
+
     model.setIdentity();
     model.m[0] = scale;
     model.m[5] = scale;
     model.m[10] = scale;
-    model.m[12] = model.m[12]; //keep position
-    model.m[13] = model.m[13];
-    model.m[14] = model.m[14];
+    
+    model.setTranslation(position);
 }
 
 void EntityPlatform::setPosition(const Vector3& new_position)
