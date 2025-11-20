@@ -108,7 +108,7 @@ void World::initTutorial() {
     platform_stair1->texture = nullptr;  // No texture, using solid color
     platform_stair1->color = Vector4(0.8f, 0.4f, 0.2f, 1.0f); 
     platform_stair1->setScale(Vector3(0.1f, 0.01f, 0.1f)); //10x1x10 units
-    platform_stair1->setPosition(Vector3(0.0f, 0.5f, -15.0f));
+    platform_stair1->setPosition(Vector3(0.0f, 0.5f, -20.0f));
     entities.push_back(platform_stair1);
     
     EntityPlatform* platform_stair2 = new EntityPlatform();
@@ -117,21 +117,29 @@ void World::initTutorial() {
     platform_stair2->texture = nullptr;  // No texture, using solid color
     platform_stair2->color = Vector4(0.8f, 0.4f, 0.2f, 1.0f);
     platform_stair2->setScale(Vector3(0.1f, 0.01f, 0.1f)); //10x1x10 units
-    platform_stair2->setPosition(Vector3(0.0f, 1.5f, -25.0f));
+    platform_stair2->setPosition(Vector3(0.0f, 1.5f, -35.0f));
     entities.push_back(platform_stair2);
     
-    /*
+    
     //create orbs
-    for (int i = 0; i < 3; i++) {
-        EntityOrb* orb = new EntityOrb();
-        orb->setPosition(Vector3((i - 1) * 2.0f, 1.0f, 0.0f));
-        //entities.push_back(orb);
-        //orbs.push_back(orb);
-    }
-    //orbs[0]->setPosition(Vector3(0.0f, 1.0f, 0.0f));
-    //orbs[1]->setPosition(Vector3(5.0f, 5.0f, 0.0f));
-    //orbs[2]->setPosition(Vector3(10.0f, 7.0f, 0.0f));
-    */
+    // Orb 1: On main platform
+    EntityOrb* orb1 = new EntityOrb();
+    orb1->setPosition(Vector3(0.0f, 0.5f, 0.0f));  // Above ground platform
+    entities.push_back(orb1);
+    orbs.push_back(orb1);
+
+    // Orb 2: On first stair platform
+    EntityOrb* orb2 = new EntityOrb();
+    orb2->setPosition(Vector3(0.0f, 1.0f, -20.0f));  // Above platform_stair1
+    entities.push_back(orb2);
+    orbs.push_back(orb2);
+
+    // Orb 3: On second stair platform
+    EntityOrb* orb3 = new EntityOrb();
+    orb3->setPosition(Vector3(0.0f, 2.0f, -35.0f));  // Above platform_stair2
+    entities.push_back(orb3);
+    orbs.push_back(orb3);
+    
 }
 
 void World::reset()
@@ -141,6 +149,11 @@ void World::reset()
 
     // Reset orbs collected counter
     orbs_collected = 0;
+
+    // Reset orbs to not collected
+    for (EntityOrb* orb : orbs) {
+        orb->reset();
+    }
 
     std::cout << "World reset! Press SPACE to jump, R to reset." << std::endl;
 }

@@ -143,37 +143,42 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 
         // Check if there's a collision (all overlaps are positive)
         if(overlapX > 0 && overlapY > 0 && overlapZ > 0) {
+            // Threshold to prevent jitter
+            const float epsilon = 0.001f;
+
+            // Check if we're mostly above the platform (for grounded detection)
+            bool mostly_above = player_center.y > platform_center.y;
+
             // Find the axis with smallest overlap (shortest separation distance)
-            if(overlapX < overlapY && overlapX < overlapZ) {
+            // But prioritize Y-axis separation when falling onto a platform
+            if(mostly_above && velocity.y <= 0 && overlapY < 2.0f) {
+                // Landing on top
+                position.y = platform_center.y + platform_half_size.y + player_half_height;
+                velocity.y = 0;
+                is_grounded = true;
+            }
+            else if(!mostly_above && velocity.y > 0 && overlapY < 2.0f) {
+                // Hit from below
+                position.y = platform_center.y - platform_half_size.y - player_half_height;
+                velocity.y = 0;
+            }
+            else if(overlapX < overlapZ && overlapX < overlapY) {
                 // Separate on X axis
                 if(player_center.x < platform_center.x) {
-                    position.x = platform_center.x - platform_half_size.x - player_half_width;
+                    position.x = platform_center.x - platform_half_size.x - player_half_width - epsilon;
                 } else {
-                    position.x = platform_center.x + platform_half_size.x + player_half_width;
+                    position.x = platform_center.x + platform_half_size.x + player_half_width + epsilon;
                 }
                 velocity.x = 0;
             }
-            else if(overlapZ < overlapY) {
+            else if(overlapZ < overlapX && overlapZ < overlapY) {
                 // Separate on Z axis
                 if(player_center.z < platform_center.z) {
-                    position.z = platform_center.z - platform_half_size.z - player_half_width;
+                    position.z = platform_center.z - platform_half_size.z - player_half_width - epsilon;
                 } else {
-                    position.z = platform_center.z + platform_half_size.z + player_half_width;
+                    position.z = platform_center.z + platform_half_size.z + player_half_width + epsilon;
                 }
                 velocity.z = 0;
-            }
-            else {
-                // Separate on Y axis
-                if(player_center.y < platform_center.y) {
-                    // Hit from below
-                    position.y = platform_center.y - platform_half_size.y - player_half_height;
-                    velocity.y = 0; // Stop upward movement
-                } else {
-                    // Landing on top
-                    position.y = platform_center.y + platform_half_size.y + player_half_height;
-                    velocity.y = 0;
-                    is_grounded = true;
-                }
             }
 
             // Update player center for next iteration
