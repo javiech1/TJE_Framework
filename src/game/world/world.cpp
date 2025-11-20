@@ -39,7 +39,7 @@ void World::render(Camera* camera)
         entity->render(camera);
     }
 
-    drawText(10, 10, "Orbs collected: " + std::to_string(orbs_collected) + "/3", Vector3(1,1,1), 2);
+    drawText(10, 35, "Orbs collected: " + std::to_string(orbs_collected) + "/3", Vector3(1,1,1), 2);
 
 }
 

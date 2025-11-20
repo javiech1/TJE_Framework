@@ -65,7 +65,6 @@ void EntityPlayer::handleInput(float delta_time)
     if (jump_pressed_now && !jump_pressed_last_frame && is_grounded) {
         velocity.y = jump_force;
         is_grounded = false;
-        std::cout << "Jump triggered! velocity.y = " << velocity.y << std::endl;
     }
 
     // Update state for next frame

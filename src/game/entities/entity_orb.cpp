@@ -50,13 +50,14 @@ void EntityOrb::update(float delta_time)
     // Rebuild transformation matrix
     model.setIdentity();
 
-    // Apply scale to make it smaller
-    model.m[0] = scale_factor;
-    model.m[5] = scale_factor;
-    model.m[10] = scale_factor;
+    // Apply scale to make it smaller and slightly elongated vertically for diamond effect
+    model.m[0] = scale_factor * 0.8f;  // Slightly narrower
+    model.m[5] = scale_factor * 1.2f;  // Taller for diamond shape
+    model.m[10] = scale_factor * 0.8f; // Slightly narrower
 
-    // Apply rotations to create diamond shape
-    model.rotate(45.0f * DEG2RAD, Vector3(0, 0, 1)); // Tilt to create diamond
+    // Apply rotations to create proper diamond shape
+    model.rotate(45.0f * DEG2RAD, Vector3(1, 0, 0)); // Tilt forward to show corner
+    model.rotate(45.0f * DEG2RAD, Vector3(0, 0, 1)); // Rotate to diamond orientation
     model.rotate(rotation_angle, Vector3(0, 1, 0)); // Spin around Y axis
 
     // Apply position
