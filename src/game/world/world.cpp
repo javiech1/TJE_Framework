@@ -100,23 +100,27 @@ void World::initTutorial() {
     platform_ground->setScale(Vector3(0.2f, 0.01f, 0.2f));  // 20×1×20 units platform
     platform_ground->setPosition(Vector3(0.0f, -0.5f, 0.0f));  // Top at y=0
     entities.push_back(platform_ground);
-/*
+
+
     EntityPlatform* platform_stair1 = new EntityPlatform();
     platform_stair1->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform_stair1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-    platform_stair1->texture = Texture::Get("data/textures/texture.tga");
-    platform_stair1->setScale(5.0f);
-    platform_stair1->setPosition(Vector3(5.0f, 2.0f, 0.0f));
-    //entities.push_back(platform_stair1);
-
+    platform_stair1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
+    platform_stair1->texture = nullptr;  // No texture, using solid color
+    platform_stair1->color = Vector4(0.8f, 0.4f, 0.2f, 1.0f); 
+    platform_stair1->setScale(Vector3(0.1f, 0.01f, 0.1f)); //10x1x10 units
+    platform_stair1->setPosition(Vector3(0.0f, 0.5f, -15.0f));
+    entities.push_back(platform_stair1);
+    
     EntityPlatform* platform_stair2 = new EntityPlatform();
     platform_stair2->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform_stair2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-    platform_stair2->texture = Texture::Get("data/textures/texture.tga");
-    platform_stair2->setScale(5.0f);
-    platform_stair2->setPosition(Vector3(10.0f, 4.0f, 0.0f));
-    //entities.push_back(platform_stair2);
-
+    platform_stair2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
+    platform_stair2->texture = nullptr;  // No texture, using solid color
+    platform_stair2->color = Vector4(0.8f, 0.4f, 0.2f, 1.0f);
+    platform_stair2->setScale(Vector3(0.1f, 0.01f, 0.1f)); //10x1x10 units
+    platform_stair2->setPosition(Vector3(0.0f, 1.5f, -25.0f));
+    entities.push_back(platform_stair2);
+    
+    /*
     //create orbs
     for (int i = 0; i < 3; i++) {
         EntityOrb* orb = new EntityOrb();
