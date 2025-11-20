@@ -37,12 +37,12 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	elapsed_time = 0.0f;
 	mouse_locked = false;
 
-	camera_state.distance = 6.0f;
+	camera_state.distance = 20.0f;  // Far enough to see everything
 	camera_state.yaw = float(M_PI);
 	camera_state.pitch = -0.3f;
-	camera_state.height_offset = 1.0f;
-	camera_state.eye = Vector3(0.0f, 2.0f, -6.0f);
-	camera_state.focus = Vector3(0.0f, 1.0f, 0.0f);
+	camera_state.height_offset = 2.0f;  // Above player
+	camera_state.eye = Vector3(0.0f, 10.0f, -20.0f);  // Far back and up
+	camera_state.focus = Vector3(0.0f, 5.0f, 0.0f);  // Looking at player area
 
 	// OpenGL flags
 	glDisable( GL_CULL_FACE ); //TEMPORALMENTE DESACTIVADO PARA DEBUG

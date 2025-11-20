@@ -25,6 +25,7 @@ class World
         EntityPlayer* getPlayer() const { return player; }
 
         void initTutorial(); //nivel tutorial
+        void reset();  // Reset world to initial state
 
     private:
         std::vector<Entity*> entities;

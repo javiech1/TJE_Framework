@@ -4,6 +4,7 @@
 #include "graphics/mesh.h"
 #include "graphics/shader.h"
 #include "framework/camera.h"
+#include <iostream>
 
 EntityPlatform::EntityPlatform() : EntityMesh()
 {
@@ -20,13 +21,27 @@ void EntityPlatform::render(Camera* camera)
 {
     if(!mesh || !shader || !visible) return;
 
-    // Set color uniform for flat shader
+    // Custom render implementation with our color
     shader->enable();
-    shader->setUniform("u_color", color);
+    shader->setUniform("u_model", model);
+    shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+    shader->setUniform("u_color", color);  // Use our custom color
+    shader->setUniform("u_time", Game::instance->time);
+
+    if(texture) {
+        shader->setUniform("u_texture", texture, 0);
+    }
+
+    mesh->render(GL_TRIANGLES);
     shader->disable();
 
-    // Call parent render
-    EntityMesh::render(camera);
+    // DEBUG: Print platform info once
+    static bool printed = false;
+    if(!printed) {
+        Vector3 pos = model.getTranslation();
+        std::cout << "Platform rendering - Pos: (" << pos.x << ", " << pos.y << ", " << pos.z << "), Half-size: (" << half_size.x << ", " << half_size.y << ", " << half_size.z << ")" << std::endl;
+        printed = true;
+    }
 }
 
 void EntityPlatform::update(float delta_time)

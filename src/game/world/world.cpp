@@ -15,10 +15,10 @@ World::World()
     player->mesh = Mesh::Get("data/meshes/box.ASE");
     player->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     player->texture = Texture::Get("data/textures/texture.tga");
-    const float scale = 0.01f;
+    const float scale = 0.01f;  // Scale down 100-unit mesh to 1 unit
     player->setScale(scale);
     // Start player above the platform so it falls down
-    player->setPosition(Vector3(0.0f, 5.0f, 0.0f));
+    player->setPosition(Vector3(0.0f, 2.0f, 0.0f));
     this->player = player;
     entities.push_back(player);
 }
@@ -67,7 +67,9 @@ void World::update(float delta_time)
 
 void World::onKeyDown(SDL_KeyboardEvent event)
 {
-
+    if (event.keysym.sym == SDLK_r) {
+        reset();
+    }
 }
 
 void World::onKeyUp(SDL_KeyboardEvent event)
@@ -95,8 +97,8 @@ void World::initTutorial() {
     platform_ground->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform_ground->texture = nullptr;  // No texture, using solid color
     platform_ground->color = Vector4(0.2f, 0.4f, 0.8f, 1.0f);  // Blue color
-    platform_ground->setScale(Vector3(20.0f, 0.5f, 20.0f));
-    platform_ground->setPosition(Vector3(0.0f, 0.0f, 0.0f));
+    platform_ground->setScale(Vector3(0.2f, 0.01f, 0.2f));  // 20×1×20 units platform
+    platform_ground->setPosition(Vector3(0.0f, -0.5f, 0.0f));  // Top at y=0
     entities.push_back(platform_ground);
 /*
     EntityPlatform* platform_stair1 = new EntityPlatform();
@@ -126,4 +128,15 @@ void World::initTutorial() {
     //orbs[1]->setPosition(Vector3(5.0f, 5.0f, 0.0f));
     //orbs[2]->setPosition(Vector3(10.0f, 7.0f, 0.0f));
     */
+}
+
+void World::reset()
+{
+    // Reset player position
+    player->setPosition(Vector3(0.0f, 2.0f, 0.0f));
+
+    // Reset orbs collected counter
+    orbs_collected = 0;
+
+    std::cout << "World reset! Press SPACE to jump, R to reset." << std::endl;
 }

@@ -2,6 +2,7 @@
 #include "framework/input.h"
 #include "game/game.h"
 #include "game/entities/entity_platform.h"
+#include <iostream>
 
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
@@ -46,10 +47,11 @@ void EntityPlayer::handleInput(float delta_time)
     right.normalize();
 
     Vector3 move_dir = Vector3(0,0,0);
-    bool moveForward = Input::isKeyPressed(SDL_SCANCODE_W) || Input::isKeyPressed(SDL_SCANCODE_UP);
-    bool moveBackward = Input::isKeyPressed(SDL_SCANCODE_S) || Input::isKeyPressed(SDL_SCANCODE_DOWN);
-    bool moveLeft = Input::isKeyPressed(SDL_SCANCODE_A) || Input::isKeyPressed(SDL_SCANCODE_LEFT);
-    bool moveRight = Input::isKeyPressed(SDL_SCANCODE_D) || Input::isKeyPressed(SDL_SCANCODE_RIGHT);
+    // Only use WASD for player movement (arrows are for camera control)
+    bool moveForward = Input::isKeyPressed(SDL_SCANCODE_W);
+    bool moveBackward = Input::isKeyPressed(SDL_SCANCODE_S);
+    bool moveLeft = Input::isKeyPressed(SDL_SCANCODE_A);
+    bool moveRight = Input::isKeyPressed(SDL_SCANCODE_D);
 
     if (moveForward) move_dir += forward;
     if (moveBackward) move_dir -= forward;
@@ -114,8 +116,9 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 {
     Vector3 player_center = position;
     //player is a cube for now
-    float player_half_width = player_scale * 0.5f;
-    float player_half_height = player_scale * 0.5f;
+    // box.ASE mesh is ~100 units (from -50 to 50), so at scale 1.0, half-size is 50
+    float player_half_width = player_scale * 50.0f;
+    float player_half_height = player_scale * 50.0f;
 
 
     //check platforms
@@ -141,6 +144,14 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
                 position.y = platform_center.y + limitY;
                 velocity.y = 0;
                 is_grounded = true;
+                rebuildModelMatrix();
+
+                // DEBUG
+                static bool printed_collision = false;
+                if(!printed_collision) {
+                    std::cout << "Collision! Player grounded at y=" << position.y << std::endl;
+                    printed_collision = true;
+                }
             }
         }
     }
