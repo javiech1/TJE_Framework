@@ -39,6 +39,24 @@ set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
 
 project (TJE_Framework CXX)
 
+# Option to enable/disable audio (bass library)
+option(USE_BASS "Enable bass audio library support" ON)
+
+# Find bass library
+if(USE_BASS)
+    if(APPLE)
+        # Look for bass library in the project's libraries directory
+        set(BASS_LIB_PATH "${DIR_LIBS}/bass/libbass.dylib")
+        if(EXISTS ${BASS_LIB_PATH})
+            message(STATUS "Found bass library at: ${BASS_LIB_PATH}")
+            set(BASS_FOUND TRUE)
+        else()
+            message(WARNING "Bass library not found at ${BASS_LIB_PATH}. Audio support disabled.")
+            set(BASS_FOUND FALSE)
+        endif()
+    endif()
+endif()
+
 if(MSVC)
   add_definitions(/MP)
 endif()
@@ -127,13 +145,24 @@ set_property(TARGET libglew_static PROPERTY FOLDER "External/libglew_static")
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL OpenGL::GLU)
 
 # bass
-if (WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC "${DIR_LIBS}/bass/bass.lib")
-elseif(APPLE)
-    # macOS: usar ruta completa a libbass.dylib
-    target_link_libraries(${PROJECT_NAME} PUBLIC "/opt/homebrew/lib/libbass.dylib")
+if(USE_BASS AND BASS_FOUND)
+    if (WIN32)
+        target_link_libraries(${PROJECT_NAME} PUBLIC "${DIR_LIBS}/bass/bass.lib")
+    elseif(APPLE)
+        # Use the local bass library from the project
+        target_link_libraries(${PROJECT_NAME} PUBLIC "${DIR_LIBS}/bass/libbass.dylib")
+        # Add bass include directory
+        target_include_directories(${PROJECT_NAME} PRIVATE "${DIR_LIBS}/bass/c")
+        # Add definition to enable bass in code
+        target_compile_definitions(${PROJECT_NAME} PRIVATE BASS_ENABLED)
+    else()
+        target_link_libraries(${PROJECT_NAME} PUBLIC -lbass)
+    endif()
+    message(STATUS "Bass audio support enabled")
 else()
-    target_link_libraries(${PROJECT_NAME} PUBLIC -lbass)
+    message(STATUS "Bass audio support disabled")
+    # Define macro to disable bass in code
+    target_compile_definitions(${PROJECT_NAME} PRIVATE NO_BASS)
 endif()
 
 # Properties

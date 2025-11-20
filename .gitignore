@@ -1,6 +1,19 @@
 build/
 *.mbin
 
+# Backup files
+CMakeLists*.backup
+CMakeLists_original.txt
+*.working_backup
+
+# Downloaded archives
+*.zip
+*.tar.gz
+*.7z
+
+# Temporary/duplicate files
+src/framework/bass.h
+
 # Claude Flow generated files
 .claude/settings.local.json
 .mcp.json
