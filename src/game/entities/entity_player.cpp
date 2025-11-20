@@ -7,7 +7,7 @@
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
     speed = 10.0f;
-    jump_force = 15.0f;
+    jump_force = 5.0f;  // Reduced for more realistic jump height
     is_grounded = false;
     velocity = Vector3(0,0,0);
     position = Vector3(0,0,0);
@@ -33,7 +33,6 @@ void EntityPlayer::update(float delta_time)
 
 void EntityPlayer::handleInput(float delta_time)
 {
-
     Camera* camera = Game::instance ? Game::instance->camera : nullptr;
     Vector3 forward = camera ? (camera->center - camera->eye) : Vector3(0.0f, 0.0f, 1.0f);
     forward.y = 0.0f;
@@ -57,10 +56,17 @@ void EntityPlayer::handleInput(float delta_time)
     if (moveBackward) move_dir -= forward;
     if (moveLeft) move_dir += right;
     if (moveRight) move_dir -= right;
-    if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) && is_grounded)
+    // Jump with SPACE - using edge detection to jump only once per press
+    static bool space_held = false;
+    if (Input::isKeyPressed(SDL_SCANCODE_SPACE))
     {
-        velocity.y = jump_force;
-        is_grounded = false;
+        if (!space_held && is_grounded) {
+            velocity.y = jump_force;
+            is_grounded = false;
+        }
+        space_held = true;
+    } else {
+        space_held = false;
     }
 
     if (move_dir.length() > 0)
@@ -139,19 +145,12 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
             float limitY = player_half_height + platform_half_size.y;
 
             //if just on top
-            if(distY > 0 && distY < limitY && velocity.y <= 0) {
+            if(distY > 0 && distY <= limitY && velocity.y <= 0) {
                 //snap to platform top
                 position.y = platform_center.y + limitY;
                 velocity.y = 0;
                 is_grounded = true;
                 rebuildModelMatrix();
-
-                // DEBUG
-                static bool printed_collision = false;
-                if(!printed_collision) {
-                    std::cout << "Collision! Player grounded at y=" << position.y << std::endl;
-                    printed_collision = true;
-                }
             }
         }
     }

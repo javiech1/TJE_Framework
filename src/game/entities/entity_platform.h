@@ -19,3 +19,4 @@ class EntityPlatform : public EntityMesh {
         void setPosition(const Vector3& new_position);
         Vector3 getHalfSize() const { return half_size; }
 };
+  

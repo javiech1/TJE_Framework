@@ -34,14 +34,6 @@ void EntityPlatform::render(Camera* camera)
 
     mesh->render(GL_TRIANGLES);
     shader->disable();
-
-    // DEBUG: Print platform info once
-    static bool printed = false;
-    if(!printed) {
-        Vector3 pos = model.getTranslation();
-        std::cout << "Platform rendering - Pos: (" << pos.x << ", " << pos.y << ", " << pos.z << "), Half-size: (" << half_size.x << ", " << half_size.y << ", " << half_size.z << ")" << std::endl;
-        printed = true;
-    }
 }
 
 void EntityPlatform::update(float delta_time)
