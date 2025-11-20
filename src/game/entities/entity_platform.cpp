@@ -51,7 +51,8 @@ void EntityPlatform::update(float delta_time)
 
 void EntityPlatform::setScale(Vector3 dimensions)
 {
-    half_size = dimensions * 0.5f;
+    // box.ASE is 100 units, so half is 50. Multiply scale by 50 to get actual half_size
+    half_size = dimensions * 50.0f;
 
     Vector3 position = model.getTranslation();
 
