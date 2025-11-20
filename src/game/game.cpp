@@ -7,6 +7,7 @@
 #include "framework/input.h"
 #include "framework/entities/entity_skybox.h"
 #include "game/stages/play_stage.h"
+#include "framework/audio.h"
 
 #include <cmath>
 #include <algorithm>
@@ -47,6 +48,13 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	// OpenGL flags
 	glDisable( GL_CULL_FACE ); //TEMPORALMENTE DESACTIVADO PARA DEBUG
 	glEnable( GL_DEPTH_TEST ); //check the occlusions using the Z buffer
+
+	// Initialize audio system
+	if (!Audio::Init()) {
+		std::cout << "Warning: Audio system failed to initialize. Game will run without sound." << std::endl;
+	} else {
+		std::cout << "Audio system initialized successfully!" << std::endl;
+	}
 
 	// Create our camera
 	camera = new Camera();

@@ -7,6 +7,7 @@
 #include "game/entities/entity_platform.h"
 #include "game/entities/entity_orb.h"
 #include "framework/utils.h"
+#include "framework/audio.h"
 
 World::World()
 {
@@ -25,6 +26,12 @@ World::World()
 
 World::~World()
 {
+    // Stop background music if playing
+    if (music_channel) {
+        Audio::Stop(music_channel);
+        music_channel = 0;
+    }
+
     for( Entity* entity : entities )
     {
         delete entity;
@@ -139,7 +146,14 @@ void World::initTutorial() {
     orb3->setPosition(Vector3(0.0f, 2.7f, -35.0f));  // Well above platform_stair2
     entities.push_back(orb3);
     orbs.push_back(orb3);
-    
+
+    // Play background music in loop
+    music_channel = Audio::Play("data/audio/stellar_drift.mp3", 0.5f, BASS_SAMPLE_LOOP);
+    if (music_channel) {
+        std::cout << "Tutorial music started!" << std::endl;
+    } else {
+        std::cout << "Warning: Could not play background music" << std::endl;
+    }
 }
 
 void World::reset()

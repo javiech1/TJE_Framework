@@ -2,6 +2,7 @@
 
 #include "framework/camera.h"
 #include "framework/input.h"
+#include "framework/extra/bass.h"  // For HCHANNEL type
 #include <vector>
 
 class Entity;
@@ -32,4 +33,5 @@ class World
         std::vector<EntityOrb*> orbs;
         EntityPlayer* player = nullptr;
         int orbs_collected = 0;
+        HCHANNEL music_channel = 0;  // Background music channel
 };
