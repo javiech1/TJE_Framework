@@ -121,11 +121,12 @@ void EntityPlayer::rebuildModelMatrix()
 void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 {
     Vector3 player_center = position;
-    //player is a cube for now
     // box.ASE mesh is ~100 units (from -50 to 50), so at scale 1.0, half-size is 50
     float player_half_width = player_scale * 50.0f;
     float player_half_height = player_scale * 50.0f;
 
+    // Store old position for rollback if needed
+    Vector3 old_position = position;
 
     //check platforms
     for(Entity* entity : entities) {
@@ -135,23 +136,49 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
         Vector3 platform_center = platform->model.getTranslation();
         Vector3 platform_half_size = platform->getHalfSize();
 
-        //check collision X and Z;
-        bool collisionX = abs(player_center.x - platform_center.x) < (player_half_width + platform_half_size.x);
-        bool collisionZ = abs(player_center.z - platform_center.z) < (player_half_width + platform_half_size.z);
+        // Calculate overlaps on each axis
+        float overlapX = (player_half_width + platform_half_size.x) - abs(player_center.x - platform_center.x);
+        float overlapY = (player_half_height + platform_half_size.y) - abs(player_center.y - platform_center.y);
+        float overlapZ = (player_half_width + platform_half_size.z) - abs(player_center.z - platform_center.z);
 
-        if(collisionX && collisionZ) {
-            //if horizantal alignment, check Y
-            float distY = player_center.y - platform_center.y;
-            float limitY = player_half_height + platform_half_size.y;
-
-            //if just on top
-            if(distY > 0 && distY <= limitY && velocity.y <= 0) {
-                //snap to platform top
-                position.y = platform_center.y + limitY;
-                velocity.y = 0;
-                is_grounded = true;
-                rebuildModelMatrix();
+        // Check if there's a collision (all overlaps are positive)
+        if(overlapX > 0 && overlapY > 0 && overlapZ > 0) {
+            // Find the axis with smallest overlap (shortest separation distance)
+            if(overlapX < overlapY && overlapX < overlapZ) {
+                // Separate on X axis
+                if(player_center.x < platform_center.x) {
+                    position.x = platform_center.x - platform_half_size.x - player_half_width;
+                } else {
+                    position.x = platform_center.x + platform_half_size.x + player_half_width;
+                }
+                velocity.x = 0;
             }
+            else if(overlapZ < overlapY) {
+                // Separate on Z axis
+                if(player_center.z < platform_center.z) {
+                    position.z = platform_center.z - platform_half_size.z - player_half_width;
+                } else {
+                    position.z = platform_center.z + platform_half_size.z + player_half_width;
+                }
+                velocity.z = 0;
+            }
+            else {
+                // Separate on Y axis
+                if(player_center.y < platform_center.y) {
+                    // Hit from below
+                    position.y = platform_center.y - platform_half_size.y - player_half_height;
+                    velocity.y = 0; // Stop upward movement
+                } else {
+                    // Landing on top
+                    position.y = platform_center.y + platform_half_size.y + player_half_height;
+                    velocity.y = 0;
+                    is_grounded = true;
+                }
+            }
+
+            // Update player center for next iteration
+            player_center = position;
+            rebuildModelMatrix();
         }
     }
 }
