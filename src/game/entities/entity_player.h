@@ -10,6 +10,7 @@ class EntityPlayer : public EntityMesh {
         float speed;
         float jump_force;
         bool is_grounded;
+        bool jump_pressed_last_frame;  // Track jump button state for edge detection
         float player_scale;
         void rebuildModelMatrix();
 

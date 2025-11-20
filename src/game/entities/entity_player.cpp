@@ -9,6 +9,7 @@ EntityPlayer::EntityPlayer() : EntityMesh()
     speed = 10.0f;
     jump_force = 5.0f;  // Reduced for more realistic jump height
     is_grounded = false;
+    jump_pressed_last_frame = false;  // Initialize jump state tracking
     velocity = Vector3(0,0,0);
     position = Vector3(0,0,0);
     player_scale = 1.0f;
@@ -56,18 +57,19 @@ void EntityPlayer::handleInput(float delta_time)
     if (moveBackward) move_dir -= forward;
     if (moveLeft) move_dir += right;
     if (moveRight) move_dir -= right;
-    // Jump with SPACE - using edge detection to jump only once per press
-    static bool space_held = false;
-    if (Input::isKeyPressed(SDL_SCANCODE_SPACE))
-    {
-        if (!space_held && is_grounded) {
-            velocity.y = jump_force;
-            is_grounded = false;
-        }
-        space_held = true;
-    } else {
-        space_held = false;
+
+    // Jump with SPACE - improved edge detection for reliable registration
+    bool jump_pressed_now = Input::isKeyPressed(SDL_SCANCODE_SPACE);
+
+    // Trigger jump on button press (not held) when grounded
+    if (jump_pressed_now && !jump_pressed_last_frame && is_grounded) {
+        velocity.y = jump_force;
+        is_grounded = false;
+        std::cout << "Jump triggered! velocity.y = " << velocity.y << std::endl;
     }
+
+    // Update state for next frame
+    jump_pressed_last_frame = jump_pressed_now;
 
     if (move_dir.length() > 0)
     {
@@ -152,8 +154,8 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
             // Find the axis with smallest overlap (shortest separation distance)
             // But prioritize Y-axis separation when falling onto a platform
             if(mostly_above && velocity.y <= 0 && overlapY < 2.0f) {
-                // Landing on top
-                position.y = platform_center.y + platform_half_size.y + player_half_height;
+                // Landing on top - add small tolerance for reliable grounded detection
+                position.y = platform_center.y + platform_half_size.y + player_half_height - 0.001f;
                 velocity.y = 0;
                 is_grounded = true;
             }

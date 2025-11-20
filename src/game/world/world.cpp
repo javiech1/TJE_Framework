@@ -122,21 +122,21 @@ void World::initTutorial() {
     
     
     //create orbs
-    // Orb 1: On main platform
+    // Orb 1: On main platform (platform top at y=0)
     EntityOrb* orb1 = new EntityOrb();
-    orb1->setPosition(Vector3(0.0f, 0.5f, 0.0f));  // Above ground platform
+    orb1->setPosition(Vector3(0.0f, 0.7f, 0.0f));  // Well above ground platform
     entities.push_back(orb1);
     orbs.push_back(orb1);
 
-    // Orb 2: On first stair platform
+    // Orb 2: On first stair platform (platform top at y=1.0)
     EntityOrb* orb2 = new EntityOrb();
-    orb2->setPosition(Vector3(0.0f, 1.0f, -20.0f));  // Above platform_stair1
+    orb2->setPosition(Vector3(0.0f, 1.7f, -20.0f));  // Well above platform_stair1
     entities.push_back(orb2);
     orbs.push_back(orb2);
 
-    // Orb 3: On second stair platform
+    // Orb 3: On second stair platform (platform top at y=2.0)
     EntityOrb* orb3 = new EntityOrb();
-    orb3->setPosition(Vector3(0.0f, 2.0f, -35.0f));  // Above platform_stair2
+    orb3->setPosition(Vector3(0.0f, 2.7f, -35.0f));  // Well above platform_stair2
     entities.push_back(orb3);
     orbs.push_back(orb3);
     
