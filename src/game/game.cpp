@@ -38,7 +38,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	elapsed_time = 0.0f;
 	mouse_locked = false;
 
-	camera_state.distance = 20.0f;  // Far enough to see everything
+	camera_state.distance = 12.0f;  // Closer camera for better player visibility
 	camera_state.yaw = float(M_PI);
 	camera_state.pitch = -0.3f;
 	camera_state.height_offset = 2.0f;  // Above player
@@ -77,19 +77,17 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	skybox->mesh = Mesh::Get("data/meshes/cubemap.ASE");
 	skybox->shader = Shader::Get("data/shaders/skybox.vs", "data/shaders/skybox.fs");
 
-	//load texture cubemap
-	// COMMENTED OUT - texture.tga is corrupted
-	// skybox->texture = new Texture();
-	// std::vector<std::string> faces = {
-	// 	"data/textures/texture.tga",
-	// 	"data/textures/texture.tga",
-	// 	"data/textures/texture.tga",
-	// 	"data/textures/texture.tga",
-	// 	"data/textures/texture.tga",
-	// 	"data/textures/texture.tga"
-	// };
-	// skybox->texture->loadCubemap("skybox_temp", faces);
-	skybox->texture = nullptr;  // Skip loading corrupted textures
+	//load texture cubemap with temporary textures
+	skybox->texture = new Texture();
+	std::vector<std::string> faces = {
+		"data/textures/rocks.png",   // right (+X)
+		"data/textures/rocks.png",   // left (-X)
+		"data/textures/grass.png",   // top (+Y) - sky-like
+		"data/textures/rocks.png",   // bottom (-Y)
+		"data/textures/rocks.png",   // front (+Z)
+		"data/textures/rocks.png"    // back (-Z)
+	};
+	skybox->texture->loadCubemap("skybox_temp", faces);
 
 	//set init stage
 	setStage(new PlayStage());
@@ -109,6 +107,11 @@ void Game::render(void)
 	
 	// Set the camera as default
 	camera->enable();
+
+	// Render skybox first (behind everything)
+	if(skybox && skybox->texture) {
+		skybox->render(camera);
+	}
 
 	//set the current stage
 	if(current_stage){

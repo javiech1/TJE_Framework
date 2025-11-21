@@ -16,7 +16,7 @@ World::World()
     player->mesh = Mesh::Get("data/meshes/arachnoid.obj");
     player->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     player->texture = Texture::Get("data/textures/arachnoid.png");
-    const float scale = 0.3f;  // Adjust scale for Arachnoid model (will need testing)
+    const float scale = 0.4f;  // Increased scale for better visibility with closer camera
     player->setScale(scale);
     // Start player above the platform so it falls down
     player->setPosition(Vector3(0.0f, 2.0f, 0.0f));
