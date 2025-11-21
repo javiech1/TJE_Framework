@@ -13,10 +13,10 @@ World::World()
 {
     //create player entity
     EntityPlayer* player = new EntityPlayer();
-    player->mesh = Mesh::Get("data/meshes/box.ASE");
+    player->mesh = Mesh::Get("data/meshes/arachnoid.obj");
     player->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-    player->texture = Texture::Get("data/textures/texture.tga");
-    const float scale = 0.01f;  // Scale down 100-unit mesh to 1 unit
+    player->texture = Texture::Get("data/textures/arachnoid.png");
+    const float scale = 0.3f;  // Adjust scale for Arachnoid model (will need testing)
     player->setScale(scale);
     // Start player above the platform so it falls down
     player->setPosition(Vector3(0.0f, 2.0f, 0.0f));

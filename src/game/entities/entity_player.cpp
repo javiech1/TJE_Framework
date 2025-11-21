@@ -122,9 +122,10 @@ void EntityPlayer::rebuildModelMatrix()
 void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 {
     Vector3 player_center = position;
-    // box.ASE mesh is ~100 units (from -50 to 50), so at scale 1.0, half-size is 50
-    float player_half_width = player_scale * 50.0f;
-    float player_half_height = player_scale * 50.0f;
+    // Arachnoid model uses standard units, adjust collision box size
+    // The model is roughly 1 unit wide/deep and 0.8 units tall
+    float player_half_width = player_scale * 0.5f;   // Half of 1 unit width
+    float player_half_height = player_scale * 0.4f;  // Half of 0.8 unit height
 
     // Store old position for rollback if needed
     Vector3 old_position = position;
