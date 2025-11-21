@@ -27,8 +27,8 @@ void EntitySkybox::render(Camera* camera) {
     shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
     //pass camera position for correct skybox rendering
     shader->setUniform("u_camera_pos", camera->eye);
-    //pass texture
-    shader->setUniform("u_texture", texture);
+    //pass texture with slot 0
+    shader->setUniform("u_texture", texture, 0);
 
     //render mesh
     mesh->render(GL_TRIANGLES);

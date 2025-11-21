@@ -25,7 +25,7 @@ void main()
     //convert pos 3D to 2D
     gl_Position = u_viewprojection * vec4(world_position, 1.0);
 
-    //set w component to far plane distance 
-    //TODO: review why this is needed (AI recommended)
-    gl_Position = gl_Position.xyww;
+    //set depth to maximum (1.0) so skybox renders behind everything
+    //this ensures the skybox fragments have depth = 1.0 after perspective divide
+    gl_Position.z = gl_Position.w;
 }

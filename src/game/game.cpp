@@ -89,6 +89,13 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	};
 	skybox->texture->loadCubemap("skybox_temp", faces);
 
+	// Debug output to verify texture loading
+	if (skybox->texture->texture_id == 0) {
+		std::cout << "ERROR: Skybox texture failed to load!" << std::endl;
+	} else {
+		std::cout << "Skybox texture loaded successfully. ID: " << skybox->texture->texture_id << std::endl;
+	}
+
 	//set init stage
 	setStage(new PlayStage());
 
