@@ -13,6 +13,8 @@ EntityPlayer::EntityPlayer() : EntityMesh()
     velocity = Vector3(0,0,0);
     position = Vector3(0,0,0);
     player_scale = 1.0f;
+    current_yaw = 0.0f;    // Start facing forward (positive Z)
+    target_yaw = 0.0f;
     rebuildModelMatrix();
 }
 
@@ -29,6 +31,18 @@ void EntityPlayer::render(Camera* camera)
 void EntityPlayer::update(float delta_time)
 {
     handleInput(delta_time);
+
+    // Smooth rotation towards target (mechanical/robotic style)
+    float rotation_speed = 15.0f; // Fast rotation for robotic feel
+    float yaw_diff = target_yaw - current_yaw;
+
+    // Normalize angle difference to [-PI, PI] for shortest rotation path
+    while (yaw_diff > M_PI) yaw_diff -= 2.0f * M_PI;
+    while (yaw_diff < -M_PI) yaw_diff += 2.0f * M_PI;
+
+    // Interpolate rotation (clamped to avoid overshooting)
+    current_yaw += yaw_diff * std::min(1.0f, rotation_speed * delta_time);
+
     applyPhysics(delta_time);
 }
 
@@ -75,6 +89,10 @@ void EntityPlayer::handleInput(float delta_time)
         move_dir.normalize();
         velocity.x = move_dir.x * speed;
         velocity.z = move_dir.z * speed;
+
+        // Calculate target rotation based on movement direction
+        // atan2 gives us the angle in radians
+        target_yaw = atan2(move_dir.x, move_dir.z);
     } else
     {
         velocity.x = 0;
@@ -111,12 +129,15 @@ void EntityPlayer::setPosition(const Vector3& new_position)
 void EntityPlayer::rebuildModelMatrix()
 {
     model.setIdentity();
-    model.m[0] = player_scale;
-    model.m[5] = player_scale;
-    model.m[10] = player_scale;
-    model.m[12] = position.x;
-    model.m[13] = position.y;
-    model.m[14] = position.z;
+
+    // First apply translation
+    model.translate(position.x, position.y, position.z);
+
+    // Then apply rotation around Y axis
+    model.rotate(current_yaw, Vector3(0, 1, 0));
+
+    // Finally apply scale
+    model.scale(player_scale, player_scale, player_scale);
 }
 
 void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)

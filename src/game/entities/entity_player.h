@@ -12,6 +12,8 @@ class EntityPlayer : public EntityMesh {
         bool is_grounded;
         bool jump_pressed_last_frame;  // Track jump button state for edge detection
         float player_scale;
+        float current_yaw;      // Current rotation angle (radians)
+        float target_yaw;       // Target rotation angle (radians)
         void rebuildModelMatrix();
 
     public:
