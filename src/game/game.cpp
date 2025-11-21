@@ -62,7 +62,9 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	camera->setPerspective(70.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
 	// Load one texture using the Texture Manager
-	texture = Texture::Get("data/textures/texture.tga");
+	// COMMENTED OUT - texture.tga is corrupted
+	// texture = Texture::Get("data/textures/texture.tga");
+	texture = nullptr;  // Skip loading corrupted texture
 
 	// Example of loading Mesh from Mesh Manager
 	mesh = Mesh::Get("data/meshes/box.ASE");
@@ -76,16 +78,18 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	skybox->shader = Shader::Get("data/shaders/skybox.vs", "data/shaders/skybox.fs");
 
 	//load texture cubemap
-	skybox->texture = new Texture();
-	std::vector<std::string> faces = {
-		"data/textures/texture.tga",
-		"data/textures/texture.tga",
-		"data/textures/texture.tga",
-		"data/textures/texture.tga",
-		"data/textures/texture.tga",
-		"data/textures/texture.tga"	
-	};
-	skybox->texture->loadCubemap("skybox_temp", faces);
+	// COMMENTED OUT - texture.tga is corrupted
+	// skybox->texture = new Texture();
+	// std::vector<std::string> faces = {
+	// 	"data/textures/texture.tga",
+	// 	"data/textures/texture.tga",
+	// 	"data/textures/texture.tga",
+	// 	"data/textures/texture.tga",
+	// 	"data/textures/texture.tga",
+	// 	"data/textures/texture.tga"
+	// };
+	// skybox->texture->loadCubemap("skybox_temp", faces);
+	skybox->texture = nullptr;  // Skip loading corrupted textures
 
 	//set init stage
 	setStage(new PlayStage());

@@ -25,6 +25,8 @@ class EntityPlayer : public EntityMesh {
         virtual void update(float delta_time) override;
         void handleInput(float delta_time);
         void applyPhysics(float delta_time);
+        void prePhysicsUpdate(float delta_time);  // Movement and input
+        void postPhysicsUpdate(float delta_time); // Gravity and integration
         void setScale(float scale);
         void setPosition(const Vector3& new_position);
         Vector3 getPosition() const { return position; }

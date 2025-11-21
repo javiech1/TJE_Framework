@@ -673,9 +673,9 @@ bool Mesh::testRayCollision(Matrix44 model, Vector3 start, Vector3 front, Vector
 	Vector3 v2;
 	v1 = Vector3(t1[3] - t1[0], t1[4] - t1[1], t1[5] - t1[2]);
 	v2 = Vector3(t1[6] - t1[0], t1[7] - t1[1], t1[8] - t1[2]);
-	v1.normalize();
-	v2.normalize();
+	// Don't normalize before cross product - calculate normal then normalize
 	normal = v1.cross(v2);
+	normal.normalize();  // Critical fix: normalize AFTER cross product
 
 	return true;
 }
@@ -702,9 +702,9 @@ bool Mesh::testSphereCollision(Matrix44 model, Vector3 center, float radius, Vec
 	Vector3 v2;
 	v1 = Vector3(t1[3] - t1[0], t1[4] - t1[1], t1[5] - t1[2]);
 	v2 = Vector3(t1[6] - t1[0], t1[7] - t1[1], t1[8] - t1[2]);
-	v1.normalize();
-	v2.normalize();
+	// Don't normalize before cross product - calculate normal then normalize
 	normal = v1.cross(v2);
+	normal.normalize();  // Critical fix: normalize AFTER cross product
 
 	return true;
 }

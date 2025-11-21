@@ -2,12 +2,13 @@
 #include "framework/input.h"
 #include "game/game.h"
 #include "game/entities/entity_platform.h"
+#include "framework/collision.h"
 #include <iostream>
 
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
     speed = 10.0f;
-    jump_force = 5.0f;  // Reduced for more realistic jump height
+    jump_force = 12.0f;  // Stronger jump force for better feel
     is_grounded = false;
     jump_pressed_last_frame = false;  // Initialize jump state tracking
     velocity = Vector3(0,0,0);
@@ -30,7 +31,15 @@ void EntityPlayer::render(Camera* camera)
 
 void EntityPlayer::update(float delta_time)
 {
+    // New update order:
+    // 1. Handle input (sets movement velocity)
     handleInput(delta_time);
+
+    // 2. Pre-physics (movement without gravity)
+    prePhysicsUpdate(delta_time);
+
+    // Note: Collision detection will be called from World::update()
+    // between prePhysicsUpdate and postPhysicsUpdate
 
     // Smooth rotation towards target (mechanical/robotic style)
     float rotation_speed = 15.0f; // Fast rotation for robotic feel
@@ -42,8 +51,6 @@ void EntityPlayer::update(float delta_time)
 
     // Interpolate rotation (clamped to avoid overshooting)
     current_yaw += yaw_diff * std::min(1.0f, rotation_speed * delta_time);
-
-    applyPhysics(delta_time);
 }
 
 void EntityPlayer::handleInput(float delta_time)
@@ -79,6 +86,12 @@ void EntityPlayer::handleInput(float delta_time)
     if (jump_pressed_now && !jump_pressed_last_frame && is_grounded) {
         velocity.y = jump_force;
         is_grounded = false;
+        std::cout << "JUMP! velocity.y = " << velocity.y << std::endl;
+    }
+
+    // Debug output when space is pressed
+    if (jump_pressed_now && !jump_pressed_last_frame) {
+        std::cout << "Space pressed! is_grounded = " << is_grounded << ", velocity.y = " << velocity.y << std::endl;
     }
 
     // Update state for next frame
@@ -100,18 +113,41 @@ void EntityPlayer::handleInput(float delta_time)
     }
 }
 
-void EntityPlayer::applyPhysics(float delta_time)
+void EntityPlayer::prePhysicsUpdate(float delta_time)
 {
-    // Apply gravity
-    velocity.y -= 9.81f * delta_time;
-
-    // Update position based on velocity
-    position += velocity * delta_time;
-
-    // Reset grounded state (will be set by checkCollisions if on platform)
-    is_grounded = false;
+    // Apply horizontal movement only (no gravity yet)
+    // This is called before collision detection
+    Vector3 movement = Vector3(velocity.x, 0, velocity.z) * delta_time;
+    position += movement;
 
     rebuildModelMatrix();
+}
+
+void EntityPlayer::postPhysicsUpdate(float delta_time)
+{
+    // Apply gravity and vertical movement AFTER collision detection
+    // Only apply gravity if not grounded
+    if (!is_grounded) {
+        velocity.y -= 9.81f * delta_time;
+    } else {
+        // Apply small damping to prevent micro-bounces
+        if (std::abs(velocity.y) < 0.1f) {
+            velocity.y = 0;
+        }
+    }
+
+    // Apply vertical movement
+    position.y += velocity.y * delta_time;
+
+    rebuildModelMatrix();
+}
+
+void EntityPlayer::applyPhysics(float delta_time)
+{
+    // Legacy method - now split into pre and post physics
+    // Keep for compatibility if needed
+    prePhysicsUpdate(delta_time);
+    postPhysicsUpdate(delta_time);
 }
 
 void EntityPlayer::setScale(float scale)
@@ -142,71 +178,97 @@ void EntityPlayer::rebuildModelMatrix()
 
 void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 {
-    Vector3 player_center = position;
-    // Arachnoid model uses standard units, adjust collision box size
-    // The model is roughly 1 unit wide/deep and 0.8 units tall
-    float player_half_width = player_scale * 0.5f;   // Half of 1 unit width
-    float player_half_height = player_scale * 0.4f;  // Half of 0.8 unit height
+    // Proper collision radius for stability
+    float player_radius = player_scale * 0.8f;
+    const float GROUND_TOLERANCE = 0.02f;
+    const float MAX_CORRECTION = 0.5f;
 
-    // Store old position for rollback if needed
-    Vector3 old_position = position;
+    // Reset grounded state
+    bool was_grounded = is_grounded;
+    is_grounded = false;
 
-    //check platforms
-    for(Entity* entity : entities) {
-        EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
-        if(!platform) continue;
+    // === RAY-BASED GROUND DETECTION (More precise) ===
+    // Cast a ray downward from player center
+    Vector3 ray_origin = position;
+    Vector3 ray_direction(0.0f, -1.0f, 0.0f);
+    sCollisionData ground_hit;
+    ground_hit.distance = FLT_MAX;  // Initialize to max distance
 
-        Vector3 platform_center = platform->model.getTranslation();
-        Vector3 platform_half_size = platform->getHalfSize();
+    // Use framework's ray casting API for precise ground detection
+    bool hit_ground = Collision::TestSceneRay(entities, ray_origin, ray_direction,
+                                              ground_hit, eCollisionFilter::FLOOR,
+                                              true, player_radius + 0.2f);
 
-        // Calculate overlaps on each axis
-        float overlapX = (player_half_width + platform_half_size.x) - abs(player_center.x - platform_center.x);
-        float overlapY = (player_half_height + platform_half_size.y) - abs(player_center.y - platform_center.y);
-        float overlapZ = (player_half_width + platform_half_size.z) - abs(player_center.z - platform_center.z);
+    if (hit_ground && ground_hit.collided) {
+        float ground_distance = ground_hit.distance;
 
-        // Check if there's a collision (all overlaps are positive)
-        if(overlapX > 0 && overlapY > 0 && overlapZ > 0) {
-            // Threshold to prevent jitter
-            const float epsilon = 0.001f;
+        // Check if we're close enough to the ground
+        if (ground_distance <= player_radius + GROUND_TOLERANCE) {
+            is_grounded = true;
 
-            // Check if we're mostly above the platform (for grounded detection)
-            bool mostly_above = player_center.y > platform_center.y;
-
-            // Find the axis with smallest overlap (shortest separation distance)
-            // But prioritize Y-axis separation when falling onto a platform
-            if(mostly_above && velocity.y <= 0 && overlapY < 2.0f) {
-                // Landing on top - add small tolerance for reliable grounded detection
-                position.y = platform_center.y + platform_half_size.y + player_half_height - 0.001f;
-                velocity.y = 0;
-                is_grounded = true;
-            }
-            else if(!mostly_above && velocity.y > 0 && overlapY < 2.0f) {
-                // Hit from below
-                position.y = platform_center.y - platform_half_size.y - player_half_height;
+            // Stop downward velocity
+            if (velocity.y <= 0) {
                 velocity.y = 0;
             }
-            else if(overlapX < overlapZ && overlapX < overlapY) {
-                // Separate on X axis
-                if(player_center.x < platform_center.x) {
-                    position.x = platform_center.x - platform_half_size.x - player_half_width - epsilon;
-                } else {
-                    position.x = platform_center.x + platform_half_size.x + player_half_width + epsilon;
-                }
-                velocity.x = 0;
-            }
-            else if(overlapZ < overlapX && overlapZ < overlapY) {
-                // Separate on Z axis
-                if(player_center.z < platform_center.z) {
-                    position.z = platform_center.z - platform_half_size.z - player_half_width - epsilon;
-                } else {
-                    position.z = platform_center.z + platform_half_size.z + player_half_width + epsilon;
-                }
-                velocity.z = 0;
-            }
 
-            // Update player center for next iteration
-            player_center = position;
-            rebuildModelMatrix();
+            // Snap to ground surface
+            if (ground_distance < player_radius - GROUND_TOLERANCE) {
+                // We're inside the ground, push up
+                position.y = ground_hit.col_point.y + player_radius;
+            }
+            else if (ground_distance > player_radius && was_grounded) {
+                // We're slightly above ground but were grounded, pull down for stability
+                position.y = ground_hit.col_point.y + player_radius;
+            }
         }
     }
+
+    // === SPHERE COLLISION FOR WALLS AND CEILINGS ===
+    Vector3 player_center = position;
+
+    for(Entity* entity : entities) {
+        std::vector<sCollisionData> collisions;
+
+        if(Collision::TestEntitySphere(entity, player_radius, player_center, collisions, eCollisionFilter::FLOOR)) {
+            for(const sCollisionData& col : collisions) {
+                if(!col.collided) continue;
+
+                float penetration = player_radius - col.distance;
+
+                // Only handle wall and ceiling collisions here (ground handled by ray)
+                if(col.col_normal.y <= 0.7f && penetration > GROUND_TOLERANCE) {
+                    // Ceiling collision (normal pointing downward)
+                    if(col.col_normal.y < -0.7f) {
+                        float correction = std::min(penetration, MAX_CORRECTION);
+                        position.y -= correction;
+                        if(velocity.y > 0) {
+                            velocity.y = 0;
+                        }
+                    }
+                    // Wall collision (normal mostly horizontal)
+                    else {
+                        float correction = std::min(penetration, MAX_CORRECTION);
+                        position += col.col_normal * correction;
+
+                        // Remove velocity component toward wall
+                        float dot = velocity.dot(col.col_normal);
+                        if(dot < 0) {
+                            velocity = velocity - col.col_normal * dot;
+                        }
+                    }
+
+                    // Update player center for next iteration
+                    player_center = position;
+                }
+            }
+        }
+    }
+
+    // Additional ground stability when consistently grounded
+    if(is_grounded && was_grounded) {
+        // Small downward bias to maintain ground contact
+        position.y -= 0.002f;
+    }
+
+    rebuildModelMatrix();
 }

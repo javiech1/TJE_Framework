@@ -52,11 +52,23 @@ void World::render(Camera* camera)
 
 void World::update(float delta_time)
 {
+    // NEW UPDATE ORDER FOR STABLE COLLISION:
+
+    // 1. Update all entities (including player's pre-physics)
     for (Entity* entity : entities)
     {
         entity->update(delta_time);
     }
 
+    // 2. Check collisions AFTER movement but BEFORE gravity
+    // This establishes ground contact before applying gravity
+    player->checkCollisions(entities);
+
+    // 3. Apply post-physics (gravity and vertical movement)
+    // Only applies gravity if not grounded (determined by collision check)
+    player->postPhysicsUpdate(delta_time);
+
+    // 4. Check orb collection
     for (EntityOrb* orb : orbs) {
         if(!orb->getIsCollected()) {
             float distance = player->distance(orb);
@@ -68,8 +80,6 @@ void World::update(float delta_time)
             }
         }
     }
-    //check player collisions
-    player->checkCollisions(entities);
 }
 
 void World::onKeyDown(SDL_KeyboardEvent event)
@@ -104,8 +114,8 @@ void World::initTutorial() {
     platform_ground->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform_ground->texture = nullptr;  // No texture, using solid color
     platform_ground->color = Vector4(0.2f, 0.4f, 0.8f, 1.0f);  // Blue color
-    platform_ground->setScale(Vector3(0.2f, 0.01f, 0.2f));  // 20×1×20 units platform
-    platform_ground->setPosition(Vector3(0.0f, -0.5f, 0.0f));  // Top at y=0
+    platform_ground->setScale(Vector3(0.2f, 0.02f, 0.2f));  // 20×2×20 units platform (2x thicker)
+    platform_ground->setPosition(Vector3(0.0f, -1.0f, 0.0f));  // Adjusted for thicker platform
     entities.push_back(platform_ground);
 
 
@@ -113,18 +123,18 @@ void World::initTutorial() {
     platform_stair1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform_stair1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform_stair1->texture = nullptr;  // No texture, using solid color
-    platform_stair1->color = Vector4(0.8f, 0.4f, 0.2f, 1.0f); 
-    platform_stair1->setScale(Vector3(0.1f, 0.01f, 0.1f)); //10x1x10 units
-    platform_stair1->setPosition(Vector3(0.0f, 0.5f, -20.0f));
+    platform_stair1->color = Vector4(0.8f, 0.4f, 0.2f, 1.0f);
+    platform_stair1->setScale(Vector3(0.1f, 0.02f, 0.1f)); //10x2x10 units (2x thicker)
+    platform_stair1->setPosition(Vector3(0.0f, 1.0f, -20.0f));  // Adjusted for thicker platform
     entities.push_back(platform_stair1);
-    
+
     EntityPlatform* platform_stair2 = new EntityPlatform();
     platform_stair2->mesh = Mesh::Get("data/meshes/box.ASE");
     platform_stair2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform_stair2->texture = nullptr;  // No texture, using solid color
     platform_stair2->color = Vector4(0.8f, 0.4f, 0.2f, 1.0f);
-    platform_stair2->setScale(Vector3(0.1f, 0.01f, 0.1f)); //10x1x10 units
-    platform_stair2->setPosition(Vector3(0.0f, 1.5f, -35.0f));
+    platform_stair2->setScale(Vector3(0.1f, 0.02f, 0.1f)); //10x2x10 units (2x thicker)
+    platform_stair2->setPosition(Vector3(0.0f, 3.0f, -35.0f));  // Adjusted for thicker platform
     entities.push_back(platform_stair2);
     
     

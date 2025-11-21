@@ -4,12 +4,16 @@
 #include "graphics/mesh.h"
 #include "graphics/shader.h"
 #include "framework/camera.h"
+#include "framework/collision.h"
 #include <iostream>
 
-EntityPlatform::EntityPlatform() : EntityMesh()
+EntityPlatform::EntityPlatform() : EntityCollider()
 {
     half_size = Vector3(0.5f, 0.5f, 0.5f);
     color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);  // Default white color
+
+    // Set collision layer for platforms (FLOOR type)
+    this->layer = eCollisionFilter::FLOOR;
 }
 
 EntityPlatform::~EntityPlatform()

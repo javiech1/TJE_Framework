@@ -1,13 +1,17 @@
 #pragma once
-#include "framework/entities/entity_mesh.h"
+#include "framework/entities/entity_collider.h"
 
 class Camera;
+class Texture;
+class Shader;
 
-class EntityPlatform : public EntityMesh {
+class EntityPlatform : public EntityCollider {
     private:
         Vector3 half_size;
 
     public:
+        Texture* texture = nullptr;
+        Shader* shader = nullptr;
         Vector4 color;  // Color for rendering with flat shader
 
         EntityPlatform();
