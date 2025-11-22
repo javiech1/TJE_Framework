@@ -2,6 +2,7 @@
 #include "stage.h"
 
 class World;
+class LevelManager;
 
 class PlayStage : public Stage
 {
@@ -18,7 +19,15 @@ class PlayStage : public Stage
         void onMouseMove(SDL_MouseMotionEvent event) override;
 
         EntityPlayer* getPlayer() const override;
-    
+
+        // Level management
+        void switchLevel(int index);
+        void nextLevel();
+        void previousLevel();
+        int getCurrentLevelIndex() const { return current_level_index; }
+
     private:
         World* world = nullptr;
+        LevelManager* level_manager = nullptr;
+        int current_level_index = 0;
 };

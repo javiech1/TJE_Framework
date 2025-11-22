@@ -1,5 +1,6 @@
 #include "game/world/world.h"
 #include "framework/entities/entity.h"
+#include "framework/entities/entity_skybox.h"
 #include "graphics/mesh.h"
 #include "graphics/texture.h"
 #include "graphics/shader.h"
@@ -8,6 +9,7 @@
 #include "game/entities/entity_orb.h"
 #include "framework/utils.h"
 #include "framework/audio.h"
+#include <iostream>
 
 World::World()
 {
@@ -20,8 +22,33 @@ World::World()
     player->setScale(scale);
     // Start player above the platform so it falls down
     player->setPosition(Vector3(0.0f, 2.0f, 0.0f));
+    player->setWorld(this);  // Connect player to world for gravity
     this->player = player;
     entities.push_back(player);
+
+    // Create default skybox
+    skybox = new EntitySkybox();
+    skybox->mesh = Mesh::Get("data/meshes/cubemap.ASE");
+    skybox->shader = Shader::Get("data/shaders/skybox.vs", "data/shaders/skybox.fs");
+
+    // Load default texture cubemap
+    skybox->texture = new Texture();
+    std::vector<std::string> faces = {
+        "data/textures/rocks.png",   // right (+X)
+        "data/textures/rocks.png",   // left (-X)
+        "data/textures/grass.png",   // top (+Y) - sky-like
+        "data/textures/rocks.png",   // bottom (-Y)
+        "data/textures/rocks.png",   // front (+Z)
+        "data/textures/rocks.png"    // back (-Z)
+    };
+    skybox->texture->loadCubemap("default_skybox", faces);
+
+    // Debug output
+    if (skybox->texture->texture_id == 0) {
+        std::cout << "ERROR: Default skybox texture failed to load!" << std::endl;
+    } else {
+        std::cout << "Default skybox loaded. ID: " << skybox->texture->texture_id << std::endl;
+    }
 }
 
 World::~World()
@@ -30,6 +57,12 @@ World::~World()
     if (music_channel) {
         Audio::Stop(music_channel);
         music_channel = 0;
+    }
+
+    // Clean up skybox
+    if (skybox) {
+        delete skybox;
+        skybox = nullptr;
     }
 
     for( Entity* entity : entities )
@@ -145,15 +178,15 @@ void World::initTutorial() {
     entities.push_back(orb1);
     orbs.push_back(orb1);
 
-    // Orb 2: On first stair platform (platform top at y=1.0)
+    // Orb 2: On first stair platform (platform top at y=2.0)
     EntityOrb* orb2 = new EntityOrb();
-    orb2->setPosition(Vector3(0.0f, 1.7f, -20.0f));  // Well above platform_stair1
+    orb2->setPosition(Vector3(0.0f, 2.7f, -20.0f));  // 0.7 units above platform_stair1
     entities.push_back(orb2);
     orbs.push_back(orb2);
 
-    // Orb 3: On second stair platform (platform top at y=2.0)
+    // Orb 3: On second stair platform (platform top at y=4.0)
     EntityOrb* orb3 = new EntityOrb();
-    orb3->setPosition(Vector3(0.0f, 2.7f, -35.0f));  // Well above platform_stair2
+    orb3->setPosition(Vector3(0.0f, 4.7f, -35.0f));  // 0.7 units above platform_stair2
     entities.push_back(orb3);
     orbs.push_back(orb3);
 
@@ -180,4 +213,74 @@ void World::reset()
     }
 
     std::cout << "World reset! Press SPACE to jump, R to reset." << std::endl;
+}
+
+// TODO(human): Implement the loadLevel method here
+void World::loadLevel(const LevelConfig& config)
+{
+
+    //store the config in current_config
+    current_config = config;
+
+    //set gravity_value from config.gravity
+    gravity_value = config.gravity;
+    
+    //clear current level (call clearLevel())
+    clearLevel();
+    
+    //based on config.type, call initTutorial() or initEmpty()
+    if(config.type == LevelConfig::TUTORIAL) {
+        initTutorial();
+    } else if(config.type == LevelConfig::EMPTY) {
+        initEmpty();
+    }
+    //Set player position from config.player_start_position
+    if(player) {
+        player->setPosition(config.player_start_position);
+    }
+    
+    //handle background music
+    if (music_channel) {
+        Audio::Stop(music_channel);
+        music_channel = 0;
+    }
+    if (!config.background_music.empty()) {
+        music_channel = Audio::Play(config.background_music.c_str(), 0.5f, BASS_SAMPLE_LOOP);
+        if (music_channel) {
+            std::cout << "Background music started: " << config.background_music << std::endl;
+        } else {
+            std::cout << "Warning: Could not play background music: " << config.background_music << std::endl;
+        }
+    }
+}
+
+void World::clearLevel()
+{
+    // Clear all entities except the player
+    std::vector<Entity*> new_entities;
+    for (Entity* entity : entities) {
+        if (entity == player) {
+            new_entities.push_back(player);  // Keep player
+        } else {
+            delete entity;  // Delete other entities
+        }
+    }
+    entities = new_entities;
+
+    // Clear orbs
+    orbs.clear();
+    orbs_collected = 0;
+
+    // Stop music if playing
+    if (music_channel) {
+        Audio::Stop(music_channel);
+        music_channel = 0;
+    }
+}
+
+void World::initEmpty()
+{
+    // Empty level - no platforms or orbs
+    // Just the player in empty space
+    std::cout << "Loaded empty level - Gravity: " << gravity_value << std::endl;
 }

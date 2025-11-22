@@ -17,8 +17,6 @@ Mesh* mesh = NULL;
 Texture* texture = NULL;
 Shader* shader = NULL;
 
-EntitySkybox* skybox = NULL;
-
 float angle = 0;
 float mouse_speed = 100.0f;
 
@@ -72,29 +70,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	// Example of shader loading using the shaders manager
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 
-	//create skybox
-	skybox = new EntitySkybox();
-	skybox->mesh = Mesh::Get("data/meshes/cubemap.ASE");
-	skybox->shader = Shader::Get("data/shaders/skybox.vs", "data/shaders/skybox.fs");
-
-	//load texture cubemap with temporary textures
-	skybox->texture = new Texture();
-	std::vector<std::string> faces = {
-		"data/textures/rocks.png",   // right (+X)
-		"data/textures/rocks.png",   // left (-X)
-		"data/textures/grass.png",   // top (+Y) - sky-like
-		"data/textures/rocks.png",   // bottom (-Y)
-		"data/textures/rocks.png",   // front (+Z)
-		"data/textures/rocks.png"    // back (-Z)
-	};
-	skybox->texture->loadCubemap("skybox_temp", faces);
-
-	// Debug output to verify texture loading
-	if (skybox->texture->texture_id == 0) {
-		std::cout << "ERROR: Skybox texture failed to load!" << std::endl;
-	} else {
-		std::cout << "Skybox texture loaded successfully. ID: " << skybox->texture->texture_id << std::endl;
-	}
+	// Skybox is now managed by World class, not here
 
 	//set init stage
 	setStage(new PlayStage());
@@ -115,10 +91,7 @@ void Game::render(void)
 	// Set the camera as default
 	camera->enable();
 
-	// Render skybox first (behind everything)
-	if(skybox && skybox->texture) {
-		skybox->render(camera);
-	}
+	// Skybox is now rendered by the stage/world
 
 	//set the current stage
 	if(current_stage){
