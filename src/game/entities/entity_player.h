@@ -10,14 +10,11 @@ class EntityPlayer : public EntityMesh {
         Vector3 velocity;
         Vector3 position;
         float speed;
-        float jump_velocity;    // Direct jump velocity (replaces jump_height)
+        float jump_velocity;    // Direct jump velocity
 
-        // Jump state and buffering
+        // Jump state
         bool is_grounded;
-        bool was_grounded_last_frame;
-        bool jump_pressed_last_frame;  // Track jump button state for edge detection
-        float jump_buffer_time;         // Jump input buffer timer
-        float coyote_time;             // Grace period after leaving ground
+        bool jump_was_pressed;  // To prevent repeated jumps while holding button
 
         // Player properties
         float player_scale;
@@ -26,9 +23,7 @@ class EntityPlayer : public EntityMesh {
         World* world;           // Reference to world for gravity
 
         // Constants
-        static constexpr float JUMP_BUFFER_DURATION = 0.1f;  // 100ms input buffer
-        static constexpr float COYOTE_TIME_DURATION = 0.1f;  // 100ms grace period
-        static constexpr float GROUND_TOLERANCE = 0.1f;      // 10cm ground detection tolerance
+        static constexpr float GROUND_TOLERANCE = 0.02f;      // 2cm ground detection tolerance
 
         void rebuildModelMatrix();
 
@@ -41,13 +36,12 @@ class EntityPlayer : public EntityMesh {
         virtual void update(float delta_time) override;
         void handleInput(float delta_time);
         void applyPhysics(float delta_time);
-        void prePhysicsUpdate(float delta_time);  // Movement and input
-        void postPhysicsUpdate(float delta_time); // Gravity and integration
         void setScale(float scale);
         void setPosition(const Vector3& new_position);
         void setWorld(World* w) { world = w; }
         Vector3 getPosition() const { return position; }
         float getScale() const { return player_scale; }
+        void resetVelocity() { velocity = Vector3(0, 0, 0); }
         void checkCollisions(const std::vector<Entity*>& entities);
 
 };

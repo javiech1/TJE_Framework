@@ -85,21 +85,26 @@ void World::render(Camera* camera)
 
 void World::update(float delta_time)
 {
-    // NEW UPDATE ORDER FOR STABLE COLLISION:
+    // SIMPLE UPDATE ORDER:
 
-    // 1. Update all entities (including player's pre-physics)
+    // 1. Update all entities (handle input and movement)
     for (Entity* entity : entities)
     {
         entity->update(delta_time);
     }
 
-    // 2. Check collisions AFTER movement but BEFORE gravity
-    // This establishes ground contact before applying gravity
+    // 2. Check collisions FIRST to establish grounded state
     player->checkCollisions(entities);
 
-    // 3. Apply post-physics (gravity and vertical movement)
-    // Only applies gravity if not grounded (determined by collision check)
-    player->postPhysicsUpdate(delta_time);
+    // 3. Apply physics AFTER collision (so is_grounded is correct)
+    player->applyPhysics(delta_time);
+
+    // Check if player has fallen below the world
+    if (player->getPosition().y < 0.0f) {
+        std::cout << "Player fell! Restarting level..." << std::endl;
+        reset();
+        return; // Skip rest of update this frame
+    }
 
     // 4. Check orb collection
     for (EntityOrb* orb : orbs) {
@@ -201,8 +206,11 @@ void World::initTutorial() {
 
 void World::reset()
 {
-    // Reset player position
-    player->setPosition(Vector3(0.0f, 2.0f, 0.0f));
+    // Reset player position to current level's starting position
+    player->setPosition(current_config.player_start_position);
+
+    // Reset player velocity to prevent momentum carryover
+    player->resetVelocity();
 
     // Reset orbs collected counter
     orbs_collected = 0;
@@ -212,7 +220,7 @@ void World::reset()
         orb->reset();
     }
 
-    std::cout << "World reset! Press SPACE to jump, R to reset." << std::endl;
+    std::cout << "Level restarted!" << std::endl;
 }
 
 // TODO(human): Implement the loadLevel method here
