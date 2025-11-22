@@ -31,23 +31,23 @@ World::World()
     skybox->mesh = Mesh::Get("data/meshes/cubemap.ASE");
     skybox->shader = Shader::Get("data/shaders/skybox.vs", "data/shaders/skybox.fs");
 
-    // Load default texture cubemap
+    // Load space skybox cubemap (standard OpenGL mapping)
     skybox->texture = new Texture();
     std::vector<std::string> faces = {
-        "data/textures/rocks.png",   // right (+X)
-        "data/textures/rocks.png",   // left (-X)
-        "data/textures/grass.png",   // top (+Y) - sky-like
-        "data/textures/rocks.png",   // bottom (-Y)
-        "data/textures/rocks.png",   // front (+Z)
-        "data/textures/rocks.png"    // back (-Z)
+        "data/sky/px.png",   // right (+X)
+        "data/sky/nx.png",   // left (-X)
+        "data/sky/py.png",   // top (+Y)
+        "data/sky/ny.png",   // bottom (-Y)
+        "data/sky/pz.png",   // front (+Z)
+        "data/sky/nz.png"    // back (-Z)
     };
-    skybox->texture->loadCubemap("default_skybox", faces);
+    skybox->texture->loadCubemap("space_skybox", faces);
 
     // Debug output
     if (skybox->texture->texture_id == 0) {
-        std::cout << "ERROR: Default skybox texture failed to load!" << std::endl;
+        std::cout << "ERROR: Space skybox texture failed to load!" << std::endl;
     } else {
-        std::cout << "Default skybox loaded. ID: " << skybox->texture->texture_id << std::endl;
+        std::cout << "Space skybox loaded successfully. ID: " << skybox->texture->texture_id << std::endl;
     }
 }
 

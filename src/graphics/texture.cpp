@@ -246,7 +246,7 @@ bool Texture::loadCubemap(const char* name, std::vector<std::string> faces, bool
 		if (ext == ".tga" || ext == ".TGA")
 			found = image->loadTGA(faces[i].c_str());
 		else if (ext == ".png" || ext == ".PNG")
-			found = image->loadPNG(faces[i].c_str(), true);
+			found = image->loadPNG(faces[i].c_str(), false); // Don't flip cubemap faces!
 		else
 		{
 			std::cout << "[ERROR]: unsupported format" << std::endl;
