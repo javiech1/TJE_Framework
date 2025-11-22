@@ -10,8 +10,8 @@
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
     // Movement
-    speed = 10.0f;
-    jump_velocity = 8.0f;  // Direct jump velocity
+    speed = 6.5f;  // Reduced from 10.0f for more precise control (max ~10 unit horizontal jumps)
+    jump_velocity = 7.5f;  // Balanced for 2.87 unit max height (challenging but achievable)
     velocity = Vector3(0,0,0);
     position = Vector3(0,0,0);
 
