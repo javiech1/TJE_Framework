@@ -34,12 +34,12 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	frame = 0;
 	time = 0.0f;
 	elapsed_time = 0.0f;
-	mouse_locked = false;
+	mouse_locked = true;  // Enable mouse-look by default
 
-	camera_state.distance = 12.0f;  // Closer camera for better player visibility
+	camera_state.distance = 10.0f;  // Optimal distance for platforming
 	camera_state.yaw = float(M_PI);
 	camera_state.pitch = -0.3f;
-	camera_state.height_offset = 2.0f;  // Above player
+	camera_state.height_offset = 3.0f;  // Higher for better platform overview
 	camera_state.eye = Vector3(0.0f, 10.0f, -20.0f);  // Far back and up
 	camera_state.focus = Vector3(0.0f, 5.0f, 0.0f);  // Looking at player area
 
@@ -116,7 +116,7 @@ void Game::update(double seconds_elapsed)
 
 	// TEMPORARY: Camera controls for debugging
 	const float mouse_sensitivity = 0.004f;
-	if (Input::isMousePressed(SDL_BUTTON_LEFT) || mouse_locked)
+	if (mouse_locked)  // Mouse-look when locked (no click required)
 	{
 		camera_state.yaw   -= Input::mouse_delta.x * mouse_sensitivity;
 		camera_state.pitch -= Input::mouse_delta.y * mouse_sensitivity;

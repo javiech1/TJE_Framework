@@ -160,8 +160,8 @@ void EntityPlayer::rebuildModelMatrix()
 
 void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 {
-    // Proper collision radius for stability
-    float player_radius = player_scale * 0.8f;
+    // Reduced collision radius to prevent floating
+    float player_radius = player_scale * 0.5f;
     const float MAX_CORRECTION = 0.5f;
 
     // Reset grounded state
@@ -187,7 +187,8 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
             is_grounded = true;
 
             // Only snap if we're significantly off from ideal position
-            float ideal_height = ground_hit.col_point.y + player_radius;
+            // Subtract offset to make player visually sit on platform
+            float ideal_height = ground_hit.col_point.y + player_radius - 0.1f;
             if (std::abs(position.y - ideal_height) > GROUND_TOLERANCE * 0.5f) {
                 position.y = ideal_height;
             }

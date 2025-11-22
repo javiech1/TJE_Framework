@@ -20,8 +20,8 @@ World::World()
     player->texture = Texture::Get("data/textures/arachnoid.png");
     const float scale = 0.4f;  // Increased scale for better visibility with closer camera
     player->setScale(scale);
-    // Start player above the platform so it falls down
-    player->setPosition(Vector3(0.0f, 2.0f, 0.0f));
+    // Start player at proper height on platform
+    player->setPosition(Vector3(0.0f, 1.0f, 0.0f));
     player->setWorld(this);  // Connect player to world for gravity
     this->player = player;
     entities.push_back(player);
@@ -205,9 +205,9 @@ void World::initTutorial() {
     platform2_1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform2_1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform2_1->texture = nullptr;
-    platform2_1->color = Vector4(0.2f, 0.8f, 0.5f, 1.0f);  // Green
+    platform2_1->color = Vector4(0.3f, 0.9f, 0.4f, 1.0f);  // Bright green
     platform2_1->setScale(Vector3(0.08f, 0.02f, 0.08f));  // 8x2x8 units
-    platform2_1->setPosition(Vector3(0.0f, -1.0f, -20.0f));  // 10 unit gap from starting platform edge
+    platform2_1->setPosition(Vector3(0.0f, -1.0f, -22.0f));  // 12 unit gap from starting platform edge (8 units edge-to-edge)
     entities.push_back(platform2_1);
 
     // Platform 2.2
@@ -215,9 +215,9 @@ void World::initTutorial() {
     platform2_2->mesh = Mesh::Get("data/meshes/box.ASE");
     platform2_2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform2_2->texture = nullptr;
-    platform2_2->color = Vector4(0.2f, 0.8f, 0.5f, 1.0f);  // Green
+    platform2_2->color = Vector4(0.3f, 0.9f, 0.4f, 1.0f);  // Bright green
     platform2_2->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform2_2->setPosition(Vector3(0.0f, -1.0f, -30.0f));  // 6 unit gap (edge to edge)
+    platform2_2->setPosition(Vector3(0.0f, -1.0f, -34.0f));  // 8 unit gap (edge to edge)
     entities.push_back(platform2_2);
 
     // Platform 2.3
@@ -225,14 +225,14 @@ void World::initTutorial() {
     platform2_3->mesh = Mesh::Get("data/meshes/box.ASE");
     platform2_3->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform2_3->texture = nullptr;
-    platform2_3->color = Vector4(0.2f, 0.8f, 0.5f, 1.0f);  // Green
+    platform2_3->color = Vector4(0.3f, 0.9f, 0.4f, 1.0f);  // Bright green
     platform2_3->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform2_3->setPosition(Vector3(0.0f, -1.0f, -40.0f));  // 6 unit gap
+    platform2_3->setPosition(Vector3(0.0f, -1.0f, -47.0f));  // 9 unit gap - harder jump!
     entities.push_back(platform2_3);
 
     // Orb 1 at end of simple jump zone
     EntityOrb* orb1 = new EntityOrb();
-    orb1->setPosition(Vector3(0.0f, 0.5f, -40.0f));
+    orb1->setPosition(Vector3(0.0f, 0.5f, -47.0f));
     entities.push_back(orb1);
     orbs.push_back(orb1);
 
@@ -243,9 +243,9 @@ void World::initTutorial() {
     platform3_1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform3_1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform3_1->texture = nullptr;
-    platform3_1->color = Vector4(0.8f, 0.8f, 0.2f, 1.0f);  // Yellow
+    platform3_1->color = Vector4(1.0f, 0.9f, 0.2f, 1.0f);  // Bright yellow
     platform3_1->setScale(Vector3(0.08f, 0.02f, 0.08f));  // 8x2x8 units
-    platform3_1->setPosition(Vector3(0.0f, 0.0f, -48.0f));  // 4 unit gap from Zone 2
+    platform3_1->setPosition(Vector3(0.0f, 0.0f, -56.0f));  // 5 unit gap from Zone 2
     entities.push_back(platform3_1);
 
     // Platform 3.2 - First climb
@@ -253,9 +253,9 @@ void World::initTutorial() {
     platform3_2->mesh = Mesh::Get("data/meshes/box.ASE");
     platform3_2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform3_2->texture = nullptr;
-    platform3_2->color = Vector4(0.8f, 0.8f, 0.2f, 1.0f);  // Yellow
+    platform3_2->color = Vector4(1.0f, 0.9f, 0.2f, 1.0f);  // Bright yellow
     platform3_2->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform3_2->setPosition(Vector3(2.0f, 2.0f, -54.0f));  // 2 units up, slight right
+    platform3_2->setPosition(Vector3(4.0f, 2.0f, -65.0f));  // 2 units up, 4 units right, diagonal jump
     entities.push_back(platform3_2);
 
     // Platform 3.3 - Second climb
@@ -263,9 +263,9 @@ void World::initTutorial() {
     platform3_3->mesh = Mesh::Get("data/meshes/box.ASE");
     platform3_3->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform3_3->texture = nullptr;
-    platform3_3->color = Vector4(0.8f, 0.8f, 0.2f, 1.0f);  // Yellow
+    platform3_3->color = Vector4(1.0f, 0.9f, 0.2f, 1.0f);  // Bright yellow
     platform3_3->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform3_3->setPosition(Vector3(-2.0f, 3.5f, -60.0f));  // 1.5 units up, left side
+    platform3_3->setPosition(Vector3(-4.0f, 3.5f, -74.0f));  // 1.5 units up, 4 units left, zigzag pattern
     entities.push_back(platform3_3);
 
     // Platform 3.4 - Top platform
@@ -273,14 +273,14 @@ void World::initTutorial() {
     platform3_4->mesh = Mesh::Get("data/meshes/box.ASE");
     platform3_4->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform3_4->texture = nullptr;
-    platform3_4->color = Vector4(0.8f, 0.8f, 0.2f, 1.0f);  // Yellow
+    platform3_4->color = Vector4(1.0f, 0.9f, 0.2f, 1.0f);  // Bright yellow
     platform3_4->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform3_4->setPosition(Vector3(0.0f, 4.5f, -66.0f));  // 1 unit up, center
+    platform3_4->setPosition(Vector3(0.0f, 5.0f, -83.0f));  // 1.5 units up, center, final staircase jump
     entities.push_back(platform3_4);
 
     // Orb 2 on highest platform
     EntityOrb* orb2 = new EntityOrb();
-    orb2->setPosition(Vector3(0.0f, 5.5f, -66.0f));
+    orb2->setPosition(Vector3(0.0f, 6.0f, -83.0f));
     entities.push_back(orb2);
     orbs.push_back(orb2);
 
@@ -291,7 +291,7 @@ void World::initTutorial() {
     platform4_1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform4_1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform4_1->texture = nullptr;
-    platform4_1->color = Vector4(1.0f, 0.5f, 0.2f, 1.0f);  // Orange
+    platform4_1->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
     platform4_1->setScale(Vector3(0.06f, 0.02f, 0.06f));  // 6x2x6 units
     platform4_1->setPosition(Vector3(0.0f, 3.0f, -74.0f));  // 4 unit gap from Zone 3
     entities.push_back(platform4_1);
@@ -301,7 +301,7 @@ void World::initTutorial() {
     platform4_2->mesh = Mesh::Get("data/meshes/box.ASE");
     platform4_2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform4_2->texture = nullptr;
-    platform4_2->color = Vector4(1.0f, 0.5f, 0.2f, 1.0f);  // Orange
+    platform4_2->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
     platform4_2->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units - smaller!
     platform4_2->setPosition(Vector3(4.0f, 2.5f, -80.0f));
     entities.push_back(platform4_2);
@@ -311,7 +311,7 @@ void World::initTutorial() {
     platform4_3->mesh = Mesh::Get("data/meshes/box.ASE");
     platform4_3->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform4_3->texture = nullptr;
-    platform4_3->color = Vector4(1.0f, 0.5f, 0.2f, 1.0f);  // Orange
+    platform4_3->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
     platform4_3->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units
     platform4_3->setPosition(Vector3(-3.0f, 3.5f, -85.0f));
     entities.push_back(platform4_3);
@@ -321,7 +321,7 @@ void World::initTutorial() {
     platform4_4->mesh = Mesh::Get("data/meshes/box.ASE");
     platform4_4->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform4_4->texture = nullptr;
-    platform4_4->color = Vector4(1.0f, 0.5f, 0.2f, 1.0f);  // Orange
+    platform4_4->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
     platform4_4->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units
     platform4_4->setPosition(Vector3(3.0f, 4.0f, -90.0f));
     entities.push_back(platform4_4);
@@ -331,7 +331,7 @@ void World::initTutorial() {
     platform4_5->mesh = Mesh::Get("data/meshes/box.ASE");
     platform4_5->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform4_5->texture = nullptr;
-    platform4_5->color = Vector4(1.0f, 0.5f, 0.2f, 1.0f);  // Orange
+    platform4_5->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
     platform4_5->setScale(Vector3(0.06f, 0.02f, 0.06f));  // 6x2x6 units
     platform4_5->setPosition(Vector3(0.0f, 3.0f, -94.0f));
     entities.push_back(platform4_5);
@@ -349,7 +349,7 @@ void World::initTutorial() {
     platform5_1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform5_1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform5_1->texture = nullptr;
-    platform5_1->color = Vector4(1.0f, 0.2f, 0.2f, 1.0f);  // Red
+    platform5_1->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
     platform5_1->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units
     platform5_1->setPosition(Vector3(-4.0f, 2.0f, -100.0f));  // 3 unit gap from Zone 4
     entities.push_back(platform5_1);
@@ -359,7 +359,7 @@ void World::initTutorial() {
     platform5_2->mesh = Mesh::Get("data/meshes/box.ASE");
     platform5_2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform5_2->texture = nullptr;
-    platform5_2->color = Vector4(1.0f, 0.2f, 0.2f, 1.0f);  // Red
+    platform5_2->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
     platform5_2->setScale(Vector3(0.04f, 0.02f, 0.04f));  // 4x2x4 units - smallest!
     platform5_2->setPosition(Vector3(5.0f, 3.5f, -105.0f));  // 9 unit horizontal jump!
     entities.push_back(platform5_2);
@@ -369,7 +369,7 @@ void World::initTutorial() {
     platform5_3->mesh = Mesh::Get("data/meshes/box.ASE");
     platform5_3->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform5_3->texture = nullptr;
-    platform5_3->color = Vector4(1.0f, 0.2f, 0.2f, 1.0f);  // Red
+    platform5_3->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
     platform5_3->setScale(Vector3(0.04f, 0.02f, 0.04f));  // 4x2x4 units
     platform5_3->setPosition(Vector3(-3.0f, 4.8f, -110.0f));  // Near max height jump
     entities.push_back(platform5_3);
@@ -379,7 +379,7 @@ void World::initTutorial() {
     platform5_4->mesh = Mesh::Get("data/meshes/box.ASE");
     platform5_4->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform5_4->texture = nullptr;
-    platform5_4->color = Vector4(1.0f, 0.2f, 0.2f, 1.0f);  // Red
+    platform5_4->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
     platform5_4->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units
     platform5_4->setPosition(Vector3(4.0f, 4.5f, -115.0f));
     entities.push_back(platform5_4);
@@ -389,7 +389,7 @@ void World::initTutorial() {
     platform5_5->mesh = Mesh::Get("data/meshes/box.ASE");
     platform5_5->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
     platform5_5->texture = nullptr;
-    platform5_5->color = Vector4(1.0f, 0.2f, 0.2f, 1.0f);  // Red
+    platform5_5->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
     platform5_5->setScale(Vector3(0.10f, 0.02f, 0.10f));  // 10x2x10 units - larger victory platform
     platform5_5->setPosition(Vector3(0.0f, 5.0f, -120.0f));
     entities.push_back(platform5_5);
