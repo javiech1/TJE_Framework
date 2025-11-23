@@ -18,6 +18,7 @@ EntityPlayer::EntityPlayer() : EntityMesh()
     // Jump state
     is_grounded = false;
     jump_was_pressed = false;
+    jump_requested = false;
 
     // Player properties
     player_scale = 1.0f;
@@ -84,7 +85,10 @@ void EntityPlayer::handleInput(float delta_time)
     if (moveLeft) move_dir += right;
     if (moveRight) move_dir -= right;
 
-    // Note: Jump is handled in applyPhysics after collision detection
+    // Detect jump input with edge detection (prevents auto-jump)
+    bool space_pressed = Input::isKeyPressed(SDL_SCANCODE_SPACE);
+    jump_requested = space_pressed && !jump_was_pressed;
+    jump_was_pressed = space_pressed;  // Update here for next frame
 
     if (move_dir.length() > 0)
     {
@@ -104,31 +108,20 @@ void EntityPlayer::handleInput(float delta_time)
 
 void EntityPlayer::applyPhysics(float delta_time)
 {
-    // Check for jump input (after collision detection has set is_grounded)
-    bool jump_pressed = Input::isKeyPressed(SDL_SCANCODE_SPACE);
-
-    // Jump only on button press (not held) and when grounded
-    if (jump_pressed && !jump_was_pressed && is_grounded) {
+    // Process jump at START (no delay!)
+    if (jump_requested && is_grounded) {
         velocity.y = jump_velocity;
-        is_grounded = false;  // Immediately mark as not grounded when jumping
+        is_grounded = false;  // Immediate feedback
         std::cout << "JUMP! velocity.y = " << velocity.y << std::endl;
     }
-    jump_was_pressed = jump_pressed;  // Update for next frame
+    // jump_was_pressed is now updated in handleInput()
 
-    // Get gravity value
+    // Always apply gravity (consistent physics)
     float gravity = world ? world->getGravity() : 9.8f;
+    velocity.y -= gravity * delta_time;
 
-    // Only apply gravity if not grounded or if jumping up
-    if (!is_grounded || velocity.y > 0) {
-        velocity.y -= gravity * delta_time;
-    } else {
-        // When grounded and not jumping, ensure no downward velocity
-        velocity.y = 0;
-    }
-
-    // Apply all movement (horizontal and vertical)
+    // Apply movement
     position += velocity * delta_time;
-
     rebuildModelMatrix();
 }
 
@@ -182,15 +175,13 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
     if (hit_ground && ground_hit.collided) {
         float ground_distance = ground_hit.distance;
 
-        // Check if we're close enough to the ground
+        // Check if we're close enough to the ground (simplified)
         if (ground_distance <= player_radius + GROUND_TOLERANCE) {
             is_grounded = true;
 
-            // Only snap if we're significantly off from ideal position
-            // Subtract offset to make player visually sit on platform
-            float ideal_height = ground_hit.col_point.y + player_radius - 0.1f;
-            if (std::abs(position.y - ideal_height) > GROUND_TOLERANCE * 0.5f) {
-                position.y = ideal_height;
+            // Stop downward velocity when we hit the ground
+            if (velocity.y < 0) {
+                velocity.y = 0;
             }
         }
     }

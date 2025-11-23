@@ -7,6 +7,7 @@
 #include "framework/input.h"
 #include "framework/entities/entity_skybox.h"
 #include "game/stages/play_stage.h"
+#include "game/stages/menu_stage.h"
 #include "framework/audio.h"
 
 #include <cmath>
@@ -72,11 +73,11 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 
 	// Skybox is now managed by World class, not here
 
-	//set init stage
-	setStage(new PlayStage());
+	//set init stage - Start with menu
+	setStage(new MenuStage());
 
-	// Lock mouse to window with relative mouse mode
-	setMouseLocked(true);
+	// Mouse will be unlocked by MenuStage for menu navigation
+	// setMouseLocked(true);  // Will be set when entering gameplay
 }
 
 //what to do when the image has to be draw
@@ -157,8 +158,9 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 {
 	switch(event.keysym.sym)
 	{
-		case SDLK_ESCAPE: must_exit = true; break; //ESC key, kill the app
-		case SDLK_F1: Shader::ReloadAll(); break; 
+		// ESC key is now handled by stages (menu/game) for proper flow
+		// case SDLK_ESCAPE: must_exit = true; break;
+		case SDLK_F1: Shader::ReloadAll(); break;
 	}
 
 	//delegate to stage

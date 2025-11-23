@@ -15,6 +15,7 @@ class EntityPlayer : public EntityMesh {
         // Jump state
         bool is_grounded;
         bool jump_was_pressed;  // To prevent repeated jumps while holding button
+        bool jump_requested;    // Jump input from handleInput to applyPhysics
 
         // Player properties
         float player_scale;

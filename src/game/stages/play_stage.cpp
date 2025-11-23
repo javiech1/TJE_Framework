@@ -1,6 +1,8 @@
 #include "play_stage.h"
+#include "menu_stage.h"
 #include "game/world/world.h"
 #include "game/levels/level_manager.h"
+#include "game/game.h"
 #include "framework/entities/entity_skybox.h"
 #include "framework/utils.h"
 #include <iostream>
@@ -13,6 +15,11 @@ PlayStage::PlayStage()
     // Load the first level (tutorial)
     current_level_index = 0;
     switchLevel(0);
+
+    // Lock mouse for gameplay
+    if (Game::instance) {
+        Game::instance->setMouseLocked(true);
+    }
 }
 
 PlayStage::~PlayStage()
@@ -43,6 +50,12 @@ void PlayStage::onKeyDown(SDL_KeyboardEvent event)
     // Handle level switching
     switch(event.keysym.sym)
     {
+        case SDLK_ESCAPE:
+            // Return to menu
+            std::cout << "Returning to main menu..." << std::endl;
+            Game::instance->setStage(new MenuStage());
+            return;  // Don't process any more input
+
         case SDLK_1: switchLevel(0); break;  // Level 1 (Tutorial)
         case SDLK_2: switchLevel(1); break;  // Level 2 (Low gravity)
         case SDLK_3: switchLevel(2); break;  // Level 3 (High gravity)
