@@ -110,24 +110,24 @@ void EntityPlayer::applyPhysics(float delta_time)
     // Jump only on button press (not held) and when grounded
     if (jump_pressed && !jump_was_pressed && is_grounded) {
         velocity.y = jump_velocity;
+        is_grounded = false;  // Immediately mark as not grounded when jumping
         std::cout << "JUMP! velocity.y = " << velocity.y << std::endl;
     }
     jump_was_pressed = jump_pressed;  // Update for next frame
 
-    // Simple physics: always apply gravity, then move
+    // Get gravity value
     float gravity = world ? world->getGravity() : 9.8f;
 
-    // Apply gravity to velocity (always, even when grounded)
-    velocity.y -= gravity * delta_time;
+    // Only apply gravity if not grounded or if jumping up
+    if (!is_grounded || velocity.y > 0) {
+        velocity.y -= gravity * delta_time;
+    } else {
+        // When grounded and not jumping, ensure no downward velocity
+        velocity.y = 0;
+    }
 
     // Apply all movement (horizontal and vertical)
     position += velocity * delta_time;
-
-    // If we're grounded and falling, stop vertical velocity
-    // This prevents accumulating downward velocity while on the ground
-    if (is_grounded && velocity.y < 0) {
-        velocity.y = 0;
-    }
 
     rebuildModelMatrix();
 }

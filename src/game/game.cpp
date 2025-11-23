@@ -75,8 +75,8 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	//set init stage
 	setStage(new PlayStage());
 
-	// Hide the cursor
-	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
+	// Lock mouse to window with relative mouse mode
+	setMouseLocked(true);
 }
 
 //what to do when the image has to be draw

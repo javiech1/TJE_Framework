@@ -31,6 +31,7 @@ void EntityPlatform::render(Camera* camera)
     shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
     shader->setUniform("u_color", color);  // Use our custom color
     shader->setUniform("u_time", Game::instance->time);
+    shader->setUniform("u_camera_pos", camera->eye);  // Pass camera position for lighting
 
     if(texture) {
         shader->setUniform("u_texture", texture, 0);
