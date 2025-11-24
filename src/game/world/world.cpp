@@ -10,6 +10,7 @@
 #include "game/entities/entity_reset_slab.h"
 #include "framework/utils.h"
 #include "framework/audio.h"
+#include "framework/collision.h"
 #include <iostream>
 
 World::World()
@@ -179,8 +180,9 @@ void World::update(float delta_time)
     // 4. Check orb collection
     for (EntityOrb* orb : orbs) {
         if(!orb->getIsCollected()) {
-            float distance = player->distance(orb);
-            if (distance < 1.0f) {
+            std::vector<sCollisionData> orb_cols;
+            // Use collision system to detect overlap with player sphere
+            if (Collision::TestEntitySphere(orb, player->getScale() * 0.5f, player->getPosition(), orb_cols, eCollisionFilter::ALL)) {
                 orb->collect();
                 orbs_collected++;
                 //TODO: add effect or smth

@@ -1,8 +1,11 @@
 #pragma once
 
-#include "framework/entities/entity_mesh.h"
+#include "framework/entities/entity_collider.h"
 
-class EntityOrb : public EntityMesh {
+class Shader;
+class Texture;
+
+class EntityOrb : public EntityCollider {
     private:
         bool isCollected = false;
         float radius = 0.5f;
@@ -12,6 +15,9 @@ class EntityOrb : public EntityMesh {
         Vector4 color;
 
     public:
+        Shader* shader = nullptr;
+        Texture* texture = nullptr;
+
         EntityOrb();
         virtual ~EntityOrb();
 

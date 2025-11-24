@@ -5,7 +5,7 @@
 #include "framework/utils.h"
 #include "game/game.h"
 
-EntityOrb::EntityOrb() : EntityMesh()
+EntityOrb::EntityOrb() : EntityCollider()
 {
     isCollected = false;
     radius = 0.5f;
@@ -16,6 +16,9 @@ EntityOrb::EntityOrb() : EntityMesh()
     mesh = Mesh::Get("data/meshes/sphere.obj");
     shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     texture = Texture::Get("data/textures/orb.png");
+    
+    // Set collision layer to detect triggers
+    this->layer = eCollisionFilter::ALL;
 }
 
 EntityOrb::~EntityOrb()

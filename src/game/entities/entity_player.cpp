@@ -161,18 +161,43 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
     is_grounded = false;
 
     // === RAY-BASED GROUND DETECTION ===
-    // Cast a ray downward from player center
-    Vector3 ray_origin = position;
+    // Cast multiple rays downward from player base (center + offsets) to detect edges
+    // Increasing robustness by checking 5 points: Center, +X, -X, +Z, -Z
     Vector3 ray_direction(0.0f, -1.0f, 0.0f);
     sCollisionData ground_hit;
-    ground_hit.distance = FLT_MAX;  // Initialize to max distance
+    ground_hit.distance = FLT_MAX;
+    bool hit_ground = false;
 
-    // Use framework's ray casting API for precise ground detection
-    bool hit_ground = Collision::TestSceneRay(entities, ray_origin, ray_direction,
-                                              ground_hit, eCollisionFilter::FLOOR,
+    // Define offsets for edge detection
+    float offset_dist = player_radius * 0.9f; // Slightly inside radius
+    Vector3 offsets[] = {
+        Vector3(0,0,0),
+        Vector3(offset_dist, 0, 0),
+        Vector3(-offset_dist, 0, 0),
+        Vector3(0, 0, offset_dist),
+        Vector3(0, 0, -offset_dist)
+    };
+
+    for(const Vector3& off : offsets) {
+        Vector3 ray_origin = position + off;
+        sCollisionData temp_hit;
+        temp_hit.distance = FLT_MAX;
+
+        bool hit = Collision::TestSceneRay(entities, ray_origin, ray_direction,
+                                              temp_hit, eCollisionFilter::FLOOR,
                                               true, player_radius + 0.2f);
+        
+        if(hit && temp_hit.collided) {
+            // Keep the hit that puts us highest (smallest distance from center vertical)
+            // But wait, distance is along ray. Smallest distance = highest ground.
+            if(temp_hit.distance < ground_hit.distance) {
+                ground_hit = temp_hit;
+                hit_ground = true;
+            }
+        }
+    }
 
-    if (hit_ground && ground_hit.collided) {
+    if (hit_ground) {
         float ground_distance = ground_hit.distance;
 
         // Check if we're close enough to the ground (simplified)
@@ -182,6 +207,9 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
             // Stop downward velocity when we hit the ground
             if (velocity.y < 0) {
                 velocity.y = 0;
+                
+                // Optional: Snap to ground to prevent micro-jitter (not strictly requested but good for robustness)
+                // position.y = position.y - (ground_distance - player_radius);
             }
         }
     }
