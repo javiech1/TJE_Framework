@@ -22,8 +22,9 @@ class EntityPlayer : public EntityMesh {
         float target_yaw;       // Target rotation angle (radians)
         World* world;           // Reference to world for gravity
 
-        // Constants
-        static constexpr float GROUND_TOLERANCE = 0.02f;      // 2cm ground detection tolerance
+        // Collision constants
+        static constexpr float GROUND_RAY_DISTANCE = 0.2f;    // How far to raycast downward for ground
+        static constexpr float GROUND_NORMAL_THRESHOLD = 0.7f; // Normal.y threshold to consider surface as ground
 
         void updateModelMatrix();
 
