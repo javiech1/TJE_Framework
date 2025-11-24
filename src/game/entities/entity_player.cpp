@@ -3,6 +3,7 @@
 #include "framework/input.h"
 #include "game/game.h"
 #include "framework/collision.h"
+#include "graphics/mesh.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -10,6 +11,7 @@
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
     // Movement
+    position = Vector3(0, 0, 0);  // Will be set by World::loadLevel()
     speed = 12.0f;
     jump_velocity = 9.0f;
     velocity = Vector3(0,0,0);
@@ -20,17 +22,33 @@ EntityPlayer::EntityPlayer() : EntityMesh()
     jump_requested = false;
 
     // Player properties
-    player_scale = 1.0f;
+    player_scale = 0.1f;
     current_yaw = 0.0f;
     target_yaw = 0.0f;
     world = nullptr;
 
-    // Initialize model matrix with identity
+    // Initialize model matrix with identity and apply default scale
     model.setIdentity();
+    updateModelMatrix();  // Apply initial scale to model matrix
 }
 
 EntityPlayer::~EntityPlayer()
 {
+}
+
+float EntityPlayer::getFootOffset() const
+{
+    if (mesh) {
+        // Calculate foot offset from AABB center to bottom
+        // Works for any model centering (base, center, top, etc.)
+        // Formula: distance from center to bottom = (max - min) / 2
+        float aabb_height = mesh->aabb_max.y - mesh->aabb_min.y;
+        float center_to_bottom = aabb_height / 2.0f;
+        float foot_offset = center_to_bottom * player_scale;
+        return foot_offset;
+    }
+    // Fallback to radius if mesh not available
+    return player_scale * 0.5f;
 }
 
 void EntityPlayer::render(Camera* camera)
@@ -138,10 +156,9 @@ void EntityPlayer::applyPhysics(float delta_time)
         velocity.z *= damping;
     }
 
-    // Apply movement directly to model matrix
-    Vector3 current_pos = model.getTranslation();
-    current_pos += velocity * delta_time;
-    model.setTranslation(current_pos.x, current_pos.y, current_pos.z);
+    // Update position with velocity
+    // Don't touch model matrix here - updateModelMatrix() will rebuild it properly
+    position += velocity * delta_time;
 }
 
 void EntityPlayer::setScale(float scale)
@@ -152,16 +169,16 @@ void EntityPlayer::setScale(float scale)
 
 void EntityPlayer::setPosition(const Vector3& new_position)
 {
-    model.setTranslation(new_position.x, new_position.y, new_position.z);
-    updateModelMatrix();
+    position = new_position;  // Update position member variable
+    updateModelMatrix();      // Rebuild model matrix with scale and rotation
 }
 
 void EntityPlayer::updateModelMatrix()
 {
-    Vector3 pos = model.getTranslation();
-
+    // Use position member variable instead of reading from model
+    // This ensures we preserve scale and rotation when rebuilding the matrix
     model.setIdentity();
-    model.translate(pos.x, pos.y, pos.z);
+    model.translate(position.x, position.y, position.z);
     model.rotate(current_yaw, Vector3(0, 1, 0));
     model.scale(player_scale, player_scale, player_scale);
 }
@@ -169,7 +186,7 @@ void EntityPlayer::updateModelMatrix()
 void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 {
     float player_radius = player_scale * 0.5f;
-    Vector3 position = model.getTranslation();
+    // Use member variable position directly, not a local copy
 
     // Reset grounded state
     is_grounded = false;
@@ -180,7 +197,10 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
     // Cast rays downward from multiple points to detect ground even on edges
 
     Vector3 ray_dir(0, -1, 0);  // Straight down
-    float ray_distance = player_radius + GROUND_RAY_DISTANCE;
+
+    // CRITICAL FIX: Use foot offset instead of radius for ray distance
+    // This ensures raycast reaches the actual feet of the mesh (0.78 + 0.2 = 0.98)
+    float ray_distance = getFootOffset() + GROUND_RAY_DISTANCE;
 
     // Check 5 points: center + 4 edge positions (for edge detection)
     float offset = player_radius * 0.85f;  // Slightly inside radius to avoid false positives
@@ -211,7 +231,8 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 
                 // Optional: Snap to ground to prevent micro-jitter
                 // Only snap if we're very close (prevents large teleportation)
-                float ground_y = ground_hit.col_point.y + player_radius;
+                // Use exact foot offset from mesh AABB instead of approximated radius
+                float ground_y = ground_hit.col_point.y + getFootOffset();
                 if(position.y < ground_y + 0.01f && position.y > ground_y - 0.05f) {
                     position.y = ground_y;
                 }
@@ -280,6 +301,6 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
         if(!collision_found) break;  // No more collisions to resolve
     }
 
-    // Update model matrix with corrected position
-    model.setTranslation(position.x, position.y, position.z);
+    // Position changes will be applied by updateModelMatrix() in update()
+    // No need to touch model matrix here - it would destroy scale and rotation
 }

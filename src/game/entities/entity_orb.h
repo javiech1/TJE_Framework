@@ -10,7 +10,7 @@ class EntityOrb : public EntityCollider {
         bool isCollected = false;
         float radius = 0.5f;
         float rotation_angle = 0.0f;
-        float scale_factor = 0.004f; // Smaller than player (player is 0.01)
+        float scale_factor = 1.5f;  // Visual scale for rendering
         Vector3 position;
         Vector4 color;
 
@@ -30,5 +30,6 @@ class EntityOrb : public EntityCollider {
 
         void setPosition(const Vector3& pos);
         Vector3 getPosition() const { return position; }
+        float getRadius() const { return scale_factor * 0.5f; }
 
 };

@@ -7,6 +7,7 @@ class World;
 class EntityPlayer : public EntityMesh {
     private:
         // Movement and physics
+        Vector3 position;       // Player world position (separate from model matrix)
         Vector3 velocity;
         float speed;
         float jump_velocity;
@@ -40,8 +41,9 @@ class EntityPlayer : public EntityMesh {
         void setScale(float scale);
         void setPosition(const Vector3& new_position);
         void setWorld(World* w) { world = w; }
-        Vector3 getPosition() const { return model.getTranslation(); }
+        Vector3 getPosition() const { return position; }
         float getScale() const { return player_scale; }
+        float getFootOffset() const;
         void resetVelocity() { velocity = Vector3(0, 0, 0); }
         void checkCollisions(const std::vector<Entity*>& entities);
 

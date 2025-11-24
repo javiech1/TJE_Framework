@@ -80,17 +80,8 @@ void EntityResetSlab::setPosition(const Vector3& new_position)
 
 bool EntityResetSlab::collidesWithPlayer(const Vector3& player_pos, float player_radius) const
 {
-    // Get slab center from model matrix
-    Vector3 slab_center(model.m[12], model.m[13], model.m[14]);
-
-    // Simple AABB vs sphere collision
-    Vector3 closest_point;
-    closest_point.x = std::max(slab_center.x - half_size.x, std::min(player_pos.x, slab_center.x + half_size.x));
-    closest_point.y = std::max(slab_center.y - half_size.y, std::min(player_pos.y, slab_center.y + half_size.y));
-    closest_point.z = std::max(slab_center.z - half_size.z, std::min(player_pos.z, slab_center.z + half_size.z));
-
-    Vector3 diff = player_pos - closest_point;
-    float distance_squared = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
-
-    return distance_squared < (player_radius * player_radius);
+    std::vector<sCollisionData> collisions;
+    // We cast this to Entity* (non-const) because TestEntitySphere expects Entity*
+    // but we are in a const method. This is safe as long as we don't modify the entity in TestEntitySphere
+    return Collision::TestEntitySphere(const_cast<EntityResetSlab*>(this), player_radius, player_pos, collisions, eCollisionFilter::ALL);
 }

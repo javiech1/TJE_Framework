@@ -21,10 +21,8 @@ World::World()
     player->mesh = Mesh::Get("data/meshes/arachnoid.obj");
     player->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
     player->texture = Texture::Get("data/textures/arachnoid.png");
-    const float scale = 0.4f;  // Increased scale for better visibility with closer camera
-    player->setScale(scale);
-    // Start player at proper height on platform
-    player->setPosition(Vector3(0.0f, 1.0f, 0.0f));
+    // Player scale is defined in EntityPlayer constructor (0.1f)
+    // Player position is set by loadLevel() from level config
     player->setWorld(this);  // Connect player to world for gravity
     this->player = player;
     entities.push_back(player);
@@ -321,29 +319,14 @@ void World::loadLevel(const LevelConfig& config)
         std::cout << "  Reset Slabs: " << config.reset_slabs.size() << std::endl;
     }
 
-    // Place player at start, snapping vertically to ground using collision system
+    // Place player at configured position, let physics handle landing
     if (player) {
-        Vector3 spawn_pos = config.player_start_position;
-
-        // Cast a ray downward to find the closest FLOOR surface under/near the start point
-        sCollisionData ground_hit;
-        ground_hit.distance = std::numeric_limits<float>::max();
-
-        Vector3 ray_origin = spawn_pos + Vector3(0.0f, 50.0f, 0.0f);
-        Vector3 ray_dir    = Vector3(0.0f, -1.0f, 0.0f);
-
-        if (Collision::TestSceneRay(entities, ray_origin, ray_dir, ground_hit, eCollisionFilter::FLOOR, true) &&
-            ground_hit.collided)
-        {
-            float radius = player->getScale() * 0.5f;
-            spawn_pos = ground_hit.col_point + Vector3(0.0f, radius + 0.01f, 0.0f);
-            std::cout << "Player snapped to ground at: " << spawn_pos.x << " " << spawn_pos.y << " " << spawn_pos.z << std::endl;
-        } else {
-            std::cout << "WARNING: Could not find ground for player spawn! Using default: " << spawn_pos.x << " " << spawn_pos.y << " " << spawn_pos.z << std::endl;
-        }
-
-        player->setPosition(spawn_pos);
+        player->setPosition(config.player_start_position);
         player->resetVelocity();
+        std::cout << "Player spawned at: "
+                  << config.player_start_position.x << " "
+                  << config.player_start_position.y << " "
+                  << config.player_start_position.z << std::endl;
     }
 
     // Play background music if specified
