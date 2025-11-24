@@ -36,21 +36,6 @@ EntityPlayer::~EntityPlayer()
 {
 }
 
-float EntityPlayer::getFootOffset() const
-{
-    if (mesh) {
-        // Calculate foot offset from AABB center to bottom
-        // Works for any model centering (base, center, top, etc.)
-        // Formula: distance from center to bottom = (max - min) / 2
-        float aabb_height = mesh->aabb_max.y - mesh->aabb_min.y;
-        float center_to_bottom = aabb_height / 2.0f;
-        float foot_offset = center_to_bottom * player_scale;
-        return foot_offset;
-    }
-    // Fallback to radius if mesh not available
-    return player_scale * 0.5f;
-}
-
 void EntityPlayer::render(Camera* camera)
 {
     EntityMesh::render(camera);
@@ -198,9 +183,9 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 
     Vector3 ray_dir(0, -1, 0);  // Straight down
 
-    // CRITICAL FIX: Use foot offset instead of radius for ray distance
-    // This ensures raycast reaches the actual feet of the mesh (0.78 + 0.2 = 0.98)
-    float ray_distance = getFootOffset() + GROUND_RAY_DISTANCE;
+    // Use collision radius for ray distance (sphere-based detection)
+    // 1.5x radius provides appropriate detection range
+    float ray_distance = player_radius * 1.5f;
 
     // Check 5 points: center + 4 edge positions (for edge detection)
     float offset = player_radius * 0.85f;  // Slightly inside radius to avoid false positives
@@ -224,17 +209,16 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
             if(ground_hit.collided && ground_hit.distance <= ray_distance) {
                 is_grounded = true;
 
-                // Stop downward velocity when grounded
-                if(velocity.y < 0) {
-                    velocity.y = 0;
-                }
+                // Calculate correct ground position using collision radius (sphere-based)
+                // Player center should be at: surface + radius (so sphere bottom touches surface)
+                float ground_y = ground_hit.col_point.y + player_radius;
 
-                // Optional: Snap to ground to prevent micro-jitter
-                // Only snap if we're very close (prevents large teleportation)
-                // Use exact foot offset from mesh AABB instead of approximated radius
-                float ground_y = ground_hit.col_point.y + getFootOffset();
-                if(position.y < ground_y + 0.01f && position.y > ground_y - 0.05f) {
+                // Bidirectional snap to handle overshooting in either direction
+                // This prevents both levitation and falling through platforms
+                float height_error = fabs(position.y - ground_y);
+                if(height_error < 0.1f && velocity.y < 0.0f) {
                     position.y = ground_y;
+                    velocity.y = 0;  // Zero velocity after snapping
                 }
 
                 break; // Found ground, no need to check more rays

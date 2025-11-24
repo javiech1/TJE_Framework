@@ -24,7 +24,6 @@ class EntityPlayer : public EntityMesh {
         World* world;           // Reference to world for gravity
 
         // Collision constants
-        static constexpr float GROUND_RAY_DISTANCE = 0.2f;    // How far to raycast downward for ground
         static constexpr float GROUND_NORMAL_THRESHOLD = 0.7f; // Normal.y threshold to consider surface as ground
 
         void updateModelMatrix();
@@ -43,7 +42,6 @@ class EntityPlayer : public EntityMesh {
         void setWorld(World* w) { world = w; }
         Vector3 getPosition() const { return position; }
         float getScale() const { return player_scale; }
-        float getFootOffset() const;
         void resetVelocity() { velocity = Vector3(0, 0, 0); }
         void checkCollisions(const std::vector<Entity*>& entities);
 

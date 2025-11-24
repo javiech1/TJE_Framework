@@ -9,6 +9,7 @@
 #include "framework/audio.h"
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 MenuStage::MenuStage()
 {
@@ -21,20 +22,22 @@ MenuStage::MenuStage()
     skybox->mesh = Mesh::Get("data/meshes/cubemap.ASE");
     skybox->shader = Shader::Get("data/shaders/skybox.vs", "data/shaders/skybox.fs");
 
-    // Try different skybox textures - using the same one as in-game for consistency
-    const char* skyboxTextures[] = {
-        "data/textures/skybox1.png",
-        "data/textures/skybox2.png",
-        "data/textures/skybox3.png",
-        "data/textures/skybox.png"
+    // Load space skybox cubemap (same as in-game for consistency)
+    skybox->texture = new Texture();
+    std::vector<std::string> faces = {
+        "data/sky/px.png",   // right (+X)
+        "data/sky/nx.png",   // left (-X)
+        "data/sky/py.png",   // top (+Y)
+        "data/sky/ny.png",   // bottom (-Y)
+        "data/sky/pz.png",   // front (+Z)
+        "data/sky/nz.png"    // back (-Z)
     };
+    skybox->texture->loadCubemap("menu_skybox", faces);
 
-    for (const char* texPath : skyboxTextures) {
-        skybox->texture = Texture::Get(texPath, false);
-        if (skybox->texture) {
-            std::cout << "Menu skybox texture loaded: " << texPath << std::endl;
-            break;
-        }
+    if (skybox->texture->texture_id == 0) {
+        std::cout << "ERROR: Menu skybox texture failed to load!" << std::endl;
+    } else {
+        std::cout << "Menu skybox loaded successfully. ID: " << skybox->texture->texture_id << std::endl;
     }
 
     // Play menu music if audio system is available
