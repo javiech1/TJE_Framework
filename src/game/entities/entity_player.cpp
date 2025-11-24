@@ -22,7 +22,7 @@ EntityPlayer::EntityPlayer() : EntityMesh()
     jump_requested = false;
 
     // Player properties
-    player_scale = 0.1f;
+    player_scale = 0.4f;
     current_yaw = 0.0f;
     target_yaw = 0.0f;
     world = nullptr;
