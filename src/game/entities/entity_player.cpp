@@ -254,7 +254,17 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
                         continue;
                     }
 
+                    // Correct normal orientation for sphere collision
+                    // Calculate direction from collision point to sphere center
+                    Vector3 to_center = position - col.col_point;
                     Vector3 collision_normal = col.col_normal;
+
+                    // Ensure normal points toward sphere center (outward from surface)
+                    // If dot product is negative, normal points away from center (inverted)
+                    if(collision_normal.dot(to_center) < 0) {
+                        collision_normal = collision_normal * -1.0f;
+                    }
+
                     float penetration = player_radius - col.distance;
 
                     // Only resolve if there's actual penetration
