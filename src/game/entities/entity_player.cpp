@@ -6,6 +6,7 @@
 #include "framework/collision.h"
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
@@ -220,7 +221,20 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
     for(Entity* entity : entities) {
         std::vector<sCollisionData> collisions;
 
-        if(Collision::TestEntitySphere(entity, player_radius, player_center, collisions, eCollisionFilter::FLOOR)) {
+        // Adjust radius based on simplified scaling logic to handle non-uniform scales
+        // We divide by max scale to ensure the object-space radius covers the world-space radius
+        // This is crucial for detecting collisions on scaled-down axes (like platforms)
+        float effective_radius = player_radius;
+        float scale_x = Vector3(entity->model.m[0], entity->model.m[1], entity->model.m[2]).length();
+        float scale_y = Vector3(entity->model.m[4], entity->model.m[5], entity->model.m[6]).length();
+        float scale_z = Vector3(entity->model.m[8], entity->model.m[9], entity->model.m[10]).length();
+        float max_scale = std::max({scale_x, scale_y, scale_z});
+
+        if (max_scale > 0.001f) {
+            effective_radius /= max_scale;
+        }
+
+        if(Collision::TestEntitySphere(entity, effective_radius, player_center, collisions, eCollisionFilter::FLOOR)) {
             for(const sCollisionData& col : collisions) {
                 if(!col.collided) continue;
 
