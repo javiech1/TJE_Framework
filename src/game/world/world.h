@@ -31,7 +31,6 @@ class World
         // Level management
         void loadLevel(const LevelConfig& config);
         void clearLevel();
-        void initTutorial(); //nivel tutorial
         void initEmpty();    //empty level for placeholders
         void reset();  // Reset world to initial state
 

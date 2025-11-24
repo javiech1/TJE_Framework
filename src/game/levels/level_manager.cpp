@@ -53,7 +53,7 @@ LevelConfig LevelManager::createLevel2() {
     LevelConfig config;
 
     config.name = "Low Gravity Zone";
-    config.type = LevelConfig::TUTORIAL;  // Use tutorial platforms and orbs
+    config.type = LevelConfig::EMPTY;  // Empty level for future design
     config.gravity = 4.9f;  // Half of Earth gravity (moon-like)
 
     // Could specify custom skybox here if desired
@@ -63,7 +63,7 @@ LevelConfig LevelManager::createLevel2() {
     config.background_music = "data/audio/stellar_drift.mp3";
     config.music_volume = 0.3f;
 
-    // Platforms and orbs created by initTutorial()
+    // Empty level - add platforms/orbs via data file or code when designing this level
 
     return config;
 }
@@ -73,7 +73,7 @@ LevelConfig LevelManager::createLevel3() {
     LevelConfig config;
 
     config.name = "High Gravity Zone";
-    config.type = LevelConfig::TUTORIAL;  // Use tutorial platforms and orbs
+    config.type = LevelConfig::EMPTY;  // Empty level for future design
     config.gravity = 19.6f;  // Double Earth gravity
 
     // Could specify custom skybox here if desired
@@ -83,7 +83,7 @@ LevelConfig LevelManager::createLevel3() {
     config.background_music = "data/audio/stellar_drift.mp3";
     config.music_volume = 0.4f;
 
-    // Platforms and orbs created by initTutorial()
+    // Empty level - add platforms/orbs via data file or code when designing this level
 
     return config;
 }

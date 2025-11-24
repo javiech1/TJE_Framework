@@ -20,9 +20,9 @@ struct LevelConfig {
 
     // Level initialization type
     enum LevelType {
-        TUTORIAL,    // Use existing initTutorial() with platforms (legacy)
+        TUTORIAL,    // DEPRECATED - No longer used (removed hardcoded level geometry)
         EMPTY,       // Empty level for future design
-        DATA         // Load from JSON data (platforms, orbs, reset_slabs vectors)
+        DATA         // Load from text file (platforms, orbs, reset_slabs)
     };
     LevelType type = EMPTY;
 

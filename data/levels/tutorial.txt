@@ -12,7 +12,6 @@ music_volume: 0.5
 # Format: platform: pos_x pos_y pos_z | scale_x scale_y scale_z | r g b a
 
 platform: 0.0 -1.0 0.0 | 0.20 0.02 0.20 | 0.2 0.5 1.0 1.0
-platform: 0.0 0.0 -12.0 | 0.12 0.02 0.12 | 0.2 0.5 1.0 1.0
 platform: 0.0 0.0 -20.0 | 0.10 0.02 0.10 | 0.3 0.9 0.4 1.0
 platform: 4.0 1.0 -27.0 | 0.10 0.02 0.10 | 0.3 0.9 0.4 1.0
 platform: 8.0 2.0 -34.0 | 0.10 0.02 0.10 | 0.3 0.9 0.4 1.0
