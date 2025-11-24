@@ -48,27 +48,20 @@ void EntityPlatform::update(float delta_time)
 
 void EntityPlatform::setScale(Vector3 dimensions)
 {
-    // box.ASE is 100 units, so half is 50. Multiply scale by 50 to get actual half_size
+    // box.ASE is 100 units, so half is 50. Store for potential future use
     half_size = dimensions * 50.0f;
 
+    // Use framework methods to build transformation matrix
     Vector3 position = model.getTranslation();
 
     model.setIdentity();
-    model.m[0] = dimensions.x;
-    model.m[5] = dimensions.y;
-    model.m[10] = dimensions.z;
-
-    // Set translation directly without calling setTranslation (which would reset the matrix)
-    model.m[12] = position.x;
-    model.m[13] = position.y;
-    model.m[14] = position.z;
+    model.translate(position.x, position.y, position.z);
+    model.scale(dimensions.x, dimensions.y, dimensions.z);
 }
-
 
 void EntityPlatform::setPosition(const Vector3& new_position)
 {
-    model.m[12] = new_position.x;
-    model.m[13] = new_position.y;
-    model.m[14] = new_position.z;
+    // Use framework method instead of direct matrix manipulation
+    model.setTranslation(new_position.x, new_position.y, new_position.z);
 }
 

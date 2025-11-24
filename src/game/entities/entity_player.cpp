@@ -2,7 +2,6 @@
 #include "game/world/world.h"
 #include "framework/input.h"
 #include "game/game.h"
-#include "game/entities/entity_platform.h"
 #include "framework/collision.h"
 #include <iostream>
 #include <cmath>
@@ -11,10 +10,9 @@
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
     // Movement
-    speed = 6.5f;  // Reduced from 10.0f for more precise control (max ~10 unit horizontal jumps)
-    jump_velocity = 7.5f;  // Balanced for 2.87 unit max height (challenging but achievable)
+    speed = 12.0f;
+    jump_velocity = 9.0f;
     velocity = Vector3(0,0,0);
-    position = Vector3(0,0,0);
 
     // Jump state
     is_grounded = false;
@@ -23,16 +21,16 @@ EntityPlayer::EntityPlayer() : EntityMesh()
 
     // Player properties
     player_scale = 1.0f;
-    current_yaw = 0.0f;    // Start facing forward (positive Z)
+    current_yaw = 0.0f;
     target_yaw = 0.0f;
-    world = nullptr;  // Will be set by World when player is created
+    world = nullptr;
 
-    rebuildModelMatrix();
+    // Initialize model matrix with identity
+    model.setIdentity();
 }
 
 EntityPlayer::~EntityPlayer()
 {
-
 }
 
 void EntityPlayer::render(Camera* camera)
@@ -42,22 +40,29 @@ void EntityPlayer::render(Camera* camera)
 
 void EntityPlayer::update(float delta_time)
 {
-    // Simple update order:
-    // 1. Handle input (sets movement velocity and jump)
+    // 1. Handle input (sets movement velocity and jump request)
     handleInput(delta_time);
 
-    // Note: World will call applyPhysics and checkCollisions
+    // 2. Apply physics (gravity, movement, friction)
+    applyPhysics(delta_time);
 
-    // Smooth rotation towards target (mechanical/robotic style)
-    float rotation_speed = 15.0f; // Fast rotation for robotic feel
+    // 3. Check and resolve collisions
+    // Note: World passes entities vector via checkCollisions()
+    // This will be called from World::update()
+
+    // 4. Smooth rotation towards target
+    float rotation_speed = 15.0f;
     float yaw_diff = target_yaw - current_yaw;
 
-    // Normalize angle difference to [-PI, PI] for shortest rotation path
+    // Normalize angle difference to [-PI, PI] for shortest rotation
     while (yaw_diff > M_PI) yaw_diff -= 2.0f * M_PI;
     while (yaw_diff < -M_PI) yaw_diff += 2.0f * M_PI;
 
-    // Interpolate rotation (clamped to avoid overshooting)
+    // Interpolate rotation
     current_yaw += yaw_diff * std::min(1.0f, rotation_speed * delta_time);
+
+    // Rebuild model matrix with new position and rotation
+    updateModelMatrix();
 }
 
 void EntityPlayer::handleInput(float delta_time)
@@ -75,7 +80,7 @@ void EntityPlayer::handleInput(float delta_time)
     right.normalize();
 
     Vector3 move_dir = Vector3(0,0,0);
-    // Only use WASD for player movement (arrows are for camera control)
+
     bool moveForward = Input::isKeyPressed(SDL_SCANCODE_W);
     bool moveBackward = Input::isKeyPressed(SDL_SCANCODE_S);
     bool moveLeft = Input::isKeyPressed(SDL_SCANCODE_A);
@@ -86,10 +91,12 @@ void EntityPlayer::handleInput(float delta_time)
     if (moveLeft) move_dir += right;
     if (moveRight) move_dir -= right;
 
-    // Detect jump input with edge detection (prevents auto-jump)
+    // Jump input with edge detection
     bool space_pressed = Input::isKeyPressed(SDL_SCANCODE_SPACE);
-    jump_requested = space_pressed && !jump_was_pressed;
-    jump_was_pressed = space_pressed;  // Update here for next frame
+    if (space_pressed && !jump_was_pressed) {
+        jump_requested = true;
+    }
+    jump_was_pressed = space_pressed;
 
     if (move_dir.length() > 0)
     {
@@ -98,9 +105,9 @@ void EntityPlayer::handleInput(float delta_time)
         velocity.z = move_dir.z * speed;
 
         // Calculate target rotation based on movement direction
-        // atan2 gives us the angle in radians
         target_yaw = atan2(move_dir.x, move_dir.z);
-    } else
+    }
+    else
     {
         velocity.x = 0;
         velocity.z = 0;
@@ -109,165 +116,111 @@ void EntityPlayer::handleInput(float delta_time)
 
 void EntityPlayer::applyPhysics(float delta_time)
 {
-    // Process jump at START (no delay!)
-    if (jump_requested && is_grounded) {
-        velocity.y = jump_velocity;
-        is_grounded = false;  // Immediate feedback
-        std::cout << "JUMP! velocity.y = " << velocity.y << std::endl;
+    // Process jump
+    if (jump_requested) {
+        if (is_grounded) {
+            velocity.y = jump_velocity;
+            is_grounded = false;
+            std::cout << "JUMP! velocity.y = " << velocity.y << std::endl;
+        }
+        jump_requested = false;
     }
-    // jump_was_pressed is now updated in handleInput()
 
-    // Always apply gravity (consistent physics)
+    // Apply gravity
     float gravity = world ? world->getGravity() : 9.8f;
     velocity.y -= gravity * delta_time;
 
-    // Apply movement
-    position += velocity * delta_time;
-    rebuildModelMatrix();
+    // Friction on ground
+    if (is_grounded) {
+        float friction = 5.0f;
+        float damping = std::max(0.0f, 1.0f - (friction * delta_time));
+        velocity.x *= damping;
+        velocity.z *= damping;
+    }
+
+    // Apply movement directly to model matrix
+    Vector3 current_pos = model.getTranslation();
+    current_pos += velocity * delta_time;
+    model.setTranslation(current_pos.x, current_pos.y, current_pos.z);
 }
 
 void EntityPlayer::setScale(float scale)
 {
     player_scale = scale;
-    rebuildModelMatrix();
+    updateModelMatrix();
 }
 
 void EntityPlayer::setPosition(const Vector3& new_position)
 {
-    position = new_position;
-    rebuildModelMatrix();
+    model.setTranslation(new_position.x, new_position.y, new_position.z);
+    updateModelMatrix();
 }
 
-void EntityPlayer::rebuildModelMatrix()
+void EntityPlayer::updateModelMatrix()
 {
+    Vector3 pos = model.getTranslation();
+
     model.setIdentity();
-
-    // First apply translation
-    model.translate(position.x, position.y, position.z);
-
-    // Then apply rotation around Y axis
+    model.translate(pos.x, pos.y, pos.z);
     model.rotate(current_yaw, Vector3(0, 1, 0));
-
-    // Finally apply scale
     model.scale(player_scale, player_scale, player_scale);
 }
 
 void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 {
-    // Reduced collision radius to prevent floating
     float player_radius = player_scale * 0.5f;
-    const float MAX_CORRECTION = 0.5f;
+    Vector3 position = model.getTranslation();
 
     // Reset grounded state
     is_grounded = false;
 
-    // === RAY-BASED GROUND DETECTION ===
-    // Cast multiple rays downward from player base (center + offsets) to detect edges
-    // Increasing robustness by checking 5 points: Center, +X, -X, +Z, -Z
-    Vector3 ray_direction(0.0f, -1.0f, 0.0f);
-    sCollisionData ground_hit;
-    ground_hit.distance = FLT_MAX;
-    bool hit_ground = false;
+    // Simplified collision resolution (2 iterations max)
+    const int iterations = 2;
 
-    // Define offsets for edge detection
-    float offset_dist = player_radius * 0.9f; // Slightly inside radius
-    Vector3 offsets[] = {
-        Vector3(0,0,0),
-        Vector3(offset_dist, 0, 0),
-        Vector3(-offset_dist, 0, 0),
-        Vector3(0, 0, offset_dist),
-        Vector3(0, 0, -offset_dist)
-    };
+    for(int iter = 0; iter < iterations; ++iter)
+    {
+        bool collision_found = false;
 
-    for(const Vector3& off : offsets) {
-        Vector3 ray_origin = position + off;
-        sCollisionData temp_hit;
-        temp_hit.distance = FLT_MAX;
+        for(Entity* entity : entities) {
+            if (entity == this) continue;
 
-        bool hit = Collision::TestSceneRay(entities, ray_origin, ray_direction,
-                                              temp_hit, eCollisionFilter::FLOOR,
-                                              true, player_radius + 0.2f);
-        
-        if(hit && temp_hit.collided) {
-            // Keep the hit that puts us highest (smallest distance from center vertical)
-            // But wait, distance is along ray. Smallest distance = highest ground.
-            if(temp_hit.distance < ground_hit.distance) {
-                ground_hit = temp_hit;
-                hit_ground = true;
-            }
-        }
-    }
+            // Use framework collision for ALL entities
+            std::vector<sCollisionData> collisions;
+            if(Collision::TestEntitySphere(entity, player_radius, position, collisions, eCollisionFilter::ALL)) {
+                for(const sCollisionData& col : collisions) {
+                    if(!col.collided) continue;
 
-    if (hit_ground) {
-        float ground_distance = ground_hit.distance;
+                    Vector3 collision_normal = col.col_normal;
+                    float penetration = player_radius - col.distance;
 
-        // Check if we're close enough to the ground (simplified)
-        if (ground_distance <= player_radius + GROUND_TOLERANCE) {
-            is_grounded = true;
+                    // Push out of collision
+                    position += collision_normal * penetration;
 
-            // Stop downward velocity when we hit the ground
-            if (velocity.y < 0) {
-                velocity.y = 0;
-                
-                // Optional: Snap to ground to prevent micro-jitter (not strictly requested but good for robustness)
-                // position.y = position.y - (ground_distance - player_radius);
-            }
-        }
-    }
-
-    // === SPHERE COLLISION FOR WALLS AND CEILINGS ===
-    Vector3 player_center = position;
-
-    for(Entity* entity : entities) {
-        std::vector<sCollisionData> collisions;
-
-        // Adjust radius based on simplified scaling logic to handle non-uniform scales
-        // We divide by max scale to ensure the object-space radius covers the world-space radius
-        // This is crucial for detecting collisions on scaled-down axes (like platforms)
-        float effective_radius = player_radius;
-        float scale_x = Vector3(entity->model.m[0], entity->model.m[1], entity->model.m[2]).length();
-        float scale_y = Vector3(entity->model.m[4], entity->model.m[5], entity->model.m[6]).length();
-        float scale_z = Vector3(entity->model.m[8], entity->model.m[9], entity->model.m[10]).length();
-        float max_scale = std::max({scale_x, scale_y, scale_z});
-
-        if (max_scale > 0.001f) {
-            effective_radius /= max_scale;
-        }
-
-        if(Collision::TestEntitySphere(entity, effective_radius, player_center, collisions, eCollisionFilter::FLOOR)) {
-            for(const sCollisionData& col : collisions) {
-                if(!col.collided) continue;
-
-                float penetration = player_radius - col.distance;
-
-                // Only handle wall and ceiling collisions here (ground handled by ray)
-                if(col.col_normal.y <= 0.7f && penetration > GROUND_TOLERANCE) {
-                    // Ceiling collision (normal pointing downward)
-                    if(col.col_normal.y < -0.7f) {
-                        float correction = std::min(penetration, MAX_CORRECTION);
-                        position.y -= correction;
-                        if(velocity.y > 0) {
-                            velocity.y = 0;
-                        }
-                    }
-                    // Wall collision (normal mostly horizontal)
-                    else {
-                        float correction = std::min(penetration, MAX_CORRECTION);
-                        position += col.col_normal * correction;
-
-                        // Remove velocity component toward wall
-                        float dot = velocity.dot(col.col_normal);
-                        if(dot < 0) {
-                            velocity = velocity - col.col_normal * dot;
-                        }
+                    // Project velocity to slide along surface
+                    float v_dot_n = velocity.dot(collision_normal);
+                    if(v_dot_n < 0) {
+                        velocity -= collision_normal * v_dot_n;
                     }
 
-                    // Update player center for next iteration
-                    player_center = position;
+                    // Ground detection
+                    if(collision_normal.y > 0.7f) {
+                        is_grounded = true;
+                        if(velocity.y < 0) velocity.y = 0;
+                    }
+                    // Ceiling detection
+                    else if(collision_normal.y < -0.7f) {
+                        if(velocity.y > 0) velocity.y = 0;
+                    }
+
+                    collision_found = true;
+                    break; // Handle one collision per entity per iteration
                 }
             }
         }
+
+        if(!collision_found) break;
     }
 
-    rebuildModelMatrix();
+    // Update model matrix with corrected position
+    model.setTranslation(position.x, position.y, position.z);
 }

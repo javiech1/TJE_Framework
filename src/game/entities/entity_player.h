@@ -8,9 +8,8 @@ class EntityPlayer : public EntityMesh {
     private:
         // Movement and physics
         Vector3 velocity;
-        Vector3 position;
         float speed;
-        float jump_velocity;    // Direct jump velocity
+        float jump_velocity;
 
         // Jump state
         bool is_grounded;
@@ -26,7 +25,7 @@ class EntityPlayer : public EntityMesh {
         // Constants
         static constexpr float GROUND_TOLERANCE = 0.02f;      // 2cm ground detection tolerance
 
-        void rebuildModelMatrix();
+        void updateModelMatrix();
 
     public:
 
@@ -40,7 +39,7 @@ class EntityPlayer : public EntityMesh {
         void setScale(float scale);
         void setPosition(const Vector3& new_position);
         void setWorld(World* w) { world = w; }
-        Vector3 getPosition() const { return position; }
+        Vector3 getPosition() const { return model.getTranslation(); }
         float getScale() const { return player_scale; }
         void resetVelocity() { velocity = Vector3(0, 0, 0); }
         void checkCollisions(const std::vector<Entity*>& entities);

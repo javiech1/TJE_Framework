@@ -12,6 +12,7 @@
 #include "framework/audio.h"
 #include "framework/collision.h"
 #include <iostream>
+#include <limits>
 
 World::World()
 {
@@ -140,9 +141,9 @@ void World::render(Camera* camera)
 
 void World::update(float delta_time)
 {
-    // SIMPLE UPDATE ORDER:
+    // SIMPLIFIED UPDATE ORDER:
 
-    // 1. Update all entities (handle input and movement)
+    // 1. Update all entities (each handles its own input, physics, and movement)
     for (Entity* entity : entities)
     {
         entity->update(delta_time);
@@ -154,11 +155,8 @@ void World::update(float delta_time)
         slab->update(delta_time);
     }
 
-    // 2. Check collisions FIRST to establish grounded state
+    // 2. Check collisions - called separately because it needs access to all entities
     player->checkCollisions(entities);
-
-    // 3. Apply physics AFTER collision (so is_grounded is correct)
-    player->applyPhysics(delta_time);
 
     // Check if player has fallen below the world
     // Threshold lowered to -20.0f to avoid accidental resets on lower platforms
@@ -177,16 +175,25 @@ void World::update(float delta_time)
         }
     }
 
-    // 4. Check orb collection
+    // 4. Check orb collection - Simple sphere-to-sphere collision
     for (EntityOrb* orb : orbs) {
         if(!orb->getIsCollected()) {
-            std::vector<sCollisionData> orb_cols;
-            // Use collision system to detect overlap with player sphere
-            if (Collision::TestEntitySphere(orb, player->getScale() * 0.5f, player->getPosition(), orb_cols, eCollisionFilter::ALL)) {
+            // Get positions
+            Vector3 player_pos = player->getPosition();
+            Vector3 orb_pos = orb->getPosition();
+
+            // Calculate collision radii
+            float player_radius = player->getScale() * 0.5f;  // 0.4 * 0.5 = 0.2
+            float orb_radius = orb->getRadius();  // Gets from orb's scale_factor
+            float collection_distance = player_radius + orb_radius;
+
+            // Check distance between centers
+            float distance = (player_pos - orb_pos).length();
+
+            if (distance < collection_distance) {
                 orb->collect();
                 orbs_collected++;
-                //TODO: add effect or smth
-                std::cout << "Orb collected!" << std::endl;
+                std::cout << "Orb collected! (" << orbs_collected << "/" << orbs.size() << ")" << std::endl;
             }
         }
     }
@@ -267,13 +274,7 @@ void World::loadLevel(const LevelConfig& config)
     // Apply level settings
     gravity_value = config.gravity;
 
-    // Set player position
-    if (player) {
-        player->setPosition(config.player_start_position);
-        player->resetVelocity();
-    }
-
-    // Handle different level types
+    // Handle different level types (populate geometry before placing player)
     if (config.type == LevelConfig::EMPTY) {
         initEmpty();
     }
@@ -282,6 +283,12 @@ void World::loadLevel(const LevelConfig& config)
         for (const auto& plat_def : config.platforms) {
             EntityPlatform* platform = new EntityPlatform();
             platform->mesh = Mesh::Get("data/meshes/box.ASE");
+            
+            // Ensure collision model is created for the mesh
+            if (platform->mesh && !platform->mesh->collision_model) {
+                platform->mesh->createCollisionModel();
+            }
+
             platform->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
             platform->setPosition(plat_def.position);
             platform->setScale(plat_def.scale);
@@ -312,6 +319,31 @@ void World::loadLevel(const LevelConfig& config)
         std::cout << "  Platforms: " << config.platforms.size() << std::endl;
         std::cout << "  Orbs: " << config.orbs.size() << std::endl;
         std::cout << "  Reset Slabs: " << config.reset_slabs.size() << std::endl;
+    }
+
+    // Place player at start, snapping vertically to ground using collision system
+    if (player) {
+        Vector3 spawn_pos = config.player_start_position;
+
+        // Cast a ray downward to find the closest FLOOR surface under/near the start point
+        sCollisionData ground_hit;
+        ground_hit.distance = std::numeric_limits<float>::max();
+
+        Vector3 ray_origin = spawn_pos + Vector3(0.0f, 50.0f, 0.0f);
+        Vector3 ray_dir    = Vector3(0.0f, -1.0f, 0.0f);
+
+        if (Collision::TestSceneRay(entities, ray_origin, ray_dir, ground_hit, eCollisionFilter::FLOOR, true) &&
+            ground_hit.collided)
+        {
+            float radius = player->getScale() * 0.5f;
+            spawn_pos = ground_hit.col_point + Vector3(0.0f, radius + 0.01f, 0.0f);
+            std::cout << "Player snapped to ground at: " << spawn_pos.x << " " << spawn_pos.y << " " << spawn_pos.z << std::endl;
+        } else {
+            std::cout << "WARNING: Could not find ground for player spawn! Using default: " << spawn_pos.x << " " << spawn_pos.y << " " << spawn_pos.z << std::endl;
+        }
+
+        player->setPosition(spawn_pos);
+        player->resetVelocity();
     }
 
     // Play background music if specified
