@@ -160,7 +160,8 @@ void World::update(float delta_time)
     player->applyPhysics(delta_time);
 
     // Check if player has fallen below the world
-    if (player->getPosition().y < 0.0f) {
+    // Threshold lowered to -20.0f to avoid accidental resets on lower platforms
+    if (player->getPosition().y < -20.0f) {
         std::cout << "Player fell! Restarting level..." << std::endl;
         reset();
         return; // Skip rest of update this frame
