@@ -7,6 +7,7 @@
 #include "game/entities/entity_player.h"
 #include "game/entities/entity_platform.h"
 #include "game/entities/entity_orb.h"
+#include "game/entities/entity_reset_slab.h"
 #include "framework/utils.h"
 #include "framework/audio.h"
 #include <iostream>
@@ -79,10 +80,16 @@ void World::render(Camera* camera)
         entity->render(camera);
     }
 
+    // Render reset slabs (semi-transparent boundaries)
+    for (EntityResetSlab* slab : reset_slabs)
+    {
+        slab->render(camera);
+    }
+
     // UI Text - orb counter (now 4 orbs in tutorial)
     drawText(10, 35, "Orbs collected: " + std::to_string(orbs_collected) + "/" + std::to_string(orbs.size()), Vector3(1,1,1), 2);
 
-    // Tutorial instructions based on player position
+    // Tutorial instructions based on player position (Z-axis progression)
     if (player) {
         float playerZ = player->getPosition().z;
         Vector3 textColor(1.0f, 1.0f, 0.0f); // Yellow for instructions
@@ -92,30 +99,30 @@ void World::render(Camera* camera)
             drawText(300, 200, "Use WASD to move around", textColor, 2);
             drawText(280, 230, "Walk to the edge and continue", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
         }
-        else if (playerZ > -44.0f) {
-            // Zone 2: Simple jumps
+        else if (playerZ > -37.0f) {
+            // Zone 2: Basic jumping (ends at Z=-34)
             drawText(300, 200, "Press SPACE to jump", textColor, 2);
             drawText(260, 230, "Jump between the green platforms", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
         }
-        else if (playerZ > -70.0f) {
-            // Zone 3: Vertical jumps
-            drawText(250, 200, "Jump to reach higher platforms", textColor, 2);
-            drawText(280, 230, "Climb the yellow stairs", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
+        else if (playerZ > -58.0f) {
+            // Zone 3: Vertical climbing (ends at Z=-56)
+            drawText(280, 200, "Jump upward to climb", textColor, 2);
+            drawText(260, 230, "Follow the yellow platforms up", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
         }
-        else if (playerZ > -96.0f) {
-            // Zone 4: Precision
-            drawText(280, 200, "Time your jumps carefully", textColor, 2);
+        else if (playerZ > -79.0f) {
+            // Zone 4: Precision (ends at Z=-77)
+            drawText(300, 200, "Precision jumps!", textColor, 2);
             drawText(240, 230, "These platforms are smaller!", Vector3(1.0f, 0.5f, 0.2f), 1.5f);
         }
-        else if (playerZ > -120.0f) {
-            // Zone 5: Final challenge
-            drawText(300, 200, "Final challenge!", Vector3(1.0f, 0.2f, 0.2f), 2);
-            drawText(240, 230, "Combine all your skills to reach the end", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
+        else if (playerZ > -87.0f) {
+            // Zone 5: Victory approach (ends at Z=-85)
+            drawText(280, 200, "Final jump to victory!", Vector3(1.0f, 0.9f, 0.2f), 2);
+            drawText(260, 230, "Jump to the gold platform!", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
         }
         else {
             // Completed!
             drawText(280, 200, "Tutorial Complete!", Vector3(0.2f, 1.0f, 0.2f), 3);
-            drawText(260, 240, "Press N for next level", Vector3(0.8f, 0.8f, 0.8f), 2);
+            drawText(260, 240, "Press R to restart", Vector3(0.8f, 0.8f, 0.8f), 2);
         }
     }
 
@@ -134,6 +141,12 @@ void World::update(float delta_time)
         entity->update(delta_time);
     }
 
+    // Update reset slabs (for pulsing animation)
+    for (EntityResetSlab* slab : reset_slabs)
+    {
+        slab->update(delta_time);
+    }
+
     // 2. Check collisions FIRST to establish grounded state
     player->checkCollisions(entities);
 
@@ -145,6 +158,15 @@ void World::update(float delta_time)
         std::cout << "Player fell! Restarting level..." << std::endl;
         reset();
         return; // Skip rest of update this frame
+    }
+
+    // Check reset slab collisions
+    for (EntityResetSlab* slab : reset_slabs) {
+        if (slab->collidesWithPlayer(player->getPosition(), player->getScale() * 0.5f)) {
+            std::cout << "Hit reset slab! Restarting level..." << std::endl;
+            reset();
+            return; // Skip rest of update this frame
+        }
     }
 
     // 4. Check orb collection
@@ -188,217 +210,191 @@ float World::getPlayerScale() const {
 
 void World::initTutorial() {
     // ========== ZONE 1: MOVEMENT PRACTICE (Z=0 to Z=-15) ==========
-    // Large starting platform for movement practice
-    EntityPlatform* platform_start = new EntityPlatform();
-    platform_start->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform_start->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
-    platform_start->texture = nullptr;
-    platform_start->color = Vector4(0.2f, 0.5f, 1.0f, 1.0f);  // Light blue
-    platform_start->setScale(Vector3(0.20f, 0.02f, 0.20f));  // 20x2x20 units - extends from Z=-10 to Z=10
-    platform_start->setPosition(Vector3(0.0f, -1.0f, 0.0f));
-    entities.push_back(platform_start);
+    // ========== ZONE 1: MOVEMENT PRACTICE ==========
+    // Platform 1.1 - Large starting platform
+    EntityPlatform* platform1_1 = new EntityPlatform();
+    platform1_1->mesh = Mesh::Get("data/meshes/box.ASE");
+    platform1_1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
+    platform1_1->texture = nullptr;
+    platform1_1->color = Vector4(0.2f, 0.5f, 1.0f, 1.0f);  // Light blue
+    platform1_1->setScale(Vector3(0.20f, 0.02f, 0.20f));  // 20x2x20 units - huge safe area
+    platform1_1->setPosition(Vector3(0.0f, -1.0f, 0.0f));
+    entities.push_back(platform1_1);
 
-    // ========== ZONE 2: SIMPLE HORIZONTAL JUMPS (Z=-20 to Z=-40) ==========
-    // Three platforms at same height for easy jumping practice
-    // Platform 2.1
+    // Platform 1.2 - Transition platform (NEW! Walking distance before first jump)
+    EntityPlatform* platform1_2 = new EntityPlatform();
+    platform1_2->mesh = Mesh::Get("data/meshes/box.ASE");
+    platform1_2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
+    platform1_2->texture = nullptr;
+    platform1_2->color = Vector4(0.2f, 0.5f, 1.0f, 1.0f);  // Light blue
+    platform1_2->setScale(Vector3(0.12f, 0.02f, 0.12f));  // 12x2x12 units
+    platform1_2->setPosition(Vector3(0.0f, 0.0f, -12.0f));  // 12 units forward - walking distance
+    entities.push_back(platform1_2);
+
+    // ========== ZONE 2: BASIC JUMPING (Spiral begins) ==========
+    // Platform 2.1 - First jump (easy, same height)
     EntityPlatform* platform2_1 = new EntityPlatform();
     platform2_1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform2_1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform2_1->texture = nullptr;
     platform2_1->color = Vector4(0.3f, 0.9f, 0.4f, 1.0f);  // Bright green
-    platform2_1->setScale(Vector3(0.08f, 0.02f, 0.08f));  // 8x2x8 units
-    platform2_1->setPosition(Vector3(0.0f, -1.0f, -22.0f));  // 12 unit gap from starting platform edge (8 units edge-to-edge)
+    platform2_1->setScale(Vector3(0.10f, 0.02f, 0.10f));  // 10x2x10 units
+    platform2_1->setPosition(Vector3(0.0f, 0.0f, -20.0f));  // 8 units from transition - achievable!
     entities.push_back(platform2_1);
 
-    // Platform 2.2
+    // Platform 2.2 - Gentle rise with diagonal movement (starts spiral)
     EntityPlatform* platform2_2 = new EntityPlatform();
     platform2_2->mesh = Mesh::Get("data/meshes/box.ASE");
     platform2_2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform2_2->texture = nullptr;
     platform2_2->color = Vector4(0.3f, 0.9f, 0.4f, 1.0f);  // Bright green
-    platform2_2->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform2_2->setPosition(Vector3(0.0f, -1.0f, -34.0f));  // 8 unit gap (edge to edge)
+    platform2_2->setScale(Vector3(0.10f, 0.02f, 0.10f));  // 10x2x10 units
+    platform2_2->setPosition(Vector3(4.0f, 1.0f, -27.0f));  // Diagonal right, +1.0 up (35% capacity)
     entities.push_back(platform2_2);
 
-    // Platform 2.3
+    // Platform 2.3 - Confidence builder (continue spiral)
     EntityPlatform* platform2_3 = new EntityPlatform();
     platform2_3->mesh = Mesh::Get("data/meshes/box.ASE");
     platform2_3->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform2_3->texture = nullptr;
     platform2_3->color = Vector4(0.3f, 0.9f, 0.4f, 1.0f);  // Bright green
-    platform2_3->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform2_3->setPosition(Vector3(0.0f, -1.0f, -47.0f));  // 9 unit gap - harder jump!
+    platform2_3->setScale(Vector3(0.10f, 0.02f, 0.10f));  // 10x2x10 units
+    platform2_3->setPosition(Vector3(8.0f, 2.0f, -34.0f));  // Further right, +1.0 up
     entities.push_back(platform2_3);
 
-    // Orb 1 at end of simple jump zone
+    // Orb 1 - Reward for completing basic jumps
     EntityOrb* orb1 = new EntityOrb();
-    orb1->setPosition(Vector3(0.0f, 0.5f, -47.0f));
+    orb1->setPosition(Vector3(8.0f, 4.0f, -34.0f));  // Above platform 2.3
     entities.push_back(orb1);
     orbs.push_back(orb1);
 
-    // ========== ZONE 3: VERTICAL PROGRESSION (Z=-48 to Z=-68) ==========
-    // Ascending staircase with lateral movement
-    // Platform 3.1 - Ground level entry
+    // ========== ZONE 3: VERTICAL CLIMBING (Curved spiral climb) ==========
+    // Platform 3.1 - Start climb (curves outward)
     EntityPlatform* platform3_1 = new EntityPlatform();
     platform3_1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform3_1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform3_1->texture = nullptr;
     platform3_1->color = Vector4(1.0f, 0.9f, 0.2f, 1.0f);  // Bright yellow
     platform3_1->setScale(Vector3(0.08f, 0.02f, 0.08f));  // 8x2x8 units
-    platform3_1->setPosition(Vector3(0.0f, 0.0f, -56.0f));  // 5 unit gap from Zone 2
+    platform3_1->setPosition(Vector3(10.0f, 3.5f, -41.0f));  // Further out, +1.5 up (52% capacity)
     entities.push_back(platform3_1);
 
-    // Platform 3.2 - First climb
+    // Platform 3.2 - DRAMATIC CLIMB! (WOW moment at 87% capacity)
     EntityPlatform* platform3_2 = new EntityPlatform();
     platform3_2->mesh = Mesh::Get("data/meshes/box.ASE");
     platform3_2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform3_2->texture = nullptr;
     platform3_2->color = Vector4(1.0f, 0.9f, 0.2f, 1.0f);  // Bright yellow
-    platform3_2->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform3_2->setPosition(Vector3(4.0f, 2.0f, -65.0f));  // 2 units up, 4 units right, diagonal jump
+    platform3_2->setScale(Vector3(0.08f, 0.02f, 0.08f));  // 8x2x8 units
+    platform3_2->setPosition(Vector3(10.0f, 6.0f, -49.0f));  // Stay out, +2.5 up! (87% capacity - challenging!)
     entities.push_back(platform3_2);
 
-    // Platform 3.3 - Second climb
+    // Platform 3.3 - Peak climb (curves back inward)
     EntityPlatform* platform3_3 = new EntityPlatform();
     platform3_3->mesh = Mesh::Get("data/meshes/box.ASE");
     platform3_3->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform3_3->texture = nullptr;
     platform3_3->color = Vector4(1.0f, 0.9f, 0.2f, 1.0f);  // Bright yellow
-    platform3_3->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform3_3->setPosition(Vector3(-4.0f, 3.5f, -74.0f));  // 1.5 units up, 4 units left, zigzag pattern
+    platform3_3->setScale(Vector3(0.08f, 0.02f, 0.08f));  // 8x2x8 units
+    platform3_3->setPosition(Vector3(8.0f, 8.0f, -56.0f));  // Curve inward, +2.0 up (70% capacity)
     entities.push_back(platform3_3);
 
-    // Platform 3.4 - Top platform
-    EntityPlatform* platform3_4 = new EntityPlatform();
-    platform3_4->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform3_4->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
-    platform3_4->texture = nullptr;
-    platform3_4->color = Vector4(1.0f, 0.9f, 0.2f, 1.0f);  // Bright yellow
-    platform3_4->setScale(Vector3(0.08f, 0.02f, 0.08f));
-    platform3_4->setPosition(Vector3(0.0f, 5.0f, -83.0f));  // 1.5 units up, center, final staircase jump
-    entities.push_back(platform3_4);
-
-    // Orb 2 on highest platform
+    // Orb 2 - Reward for mastering vertical climbing
     EntityOrb* orb2 = new EntityOrb();
-    orb2->setPosition(Vector3(0.0f, 6.0f, -83.0f));
+    orb2->setPosition(Vector3(8.0f, 10.0f, -56.0f));  // Above platform 3.3
     entities.push_back(orb2);
     orbs.push_back(orb2);
 
-    // ========== ZONE 4: PRECISION JUMPS (Z=-74 to Z=-94) ==========
-    // Smaller platforms requiring careful positioning
-    // Platform 4.1
+    // ========== ZONE 4: PRECISION CHALLENGE (Zigzag pattern) ==========
+    // Platform 4.1 - Right swing (smaller platforms!)
     EntityPlatform* platform4_1 = new EntityPlatform();
     platform4_1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform4_1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform4_1->texture = nullptr;
     platform4_1->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
-    platform4_1->setScale(Vector3(0.06f, 0.02f, 0.06f));  // 6x2x6 units
-    platform4_1->setPosition(Vector3(0.0f, 3.0f, -74.0f));  // 4 unit gap from Zone 3
+    platform4_1->setScale(Vector3(0.06f, 0.02f, 0.06f));  // 6x2x6 units - precision required!
+    platform4_1->setPosition(Vector3(12.0f, 9.0f, -63.0f));  // Right swing, +1.0 up
     entities.push_back(platform4_1);
 
-    // Platform 4.2 - Lateral jump right
+    // Platform 4.2 - Left swing (max horizontal+vertical challenge!)
     EntityPlatform* platform4_2 = new EntityPlatform();
     platform4_2->mesh = Mesh::Get("data/meshes/box.ASE");
     platform4_2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform4_2->texture = nullptr;
     platform4_2->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
-    platform4_2->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units - smaller!
-    platform4_2->setPosition(Vector3(4.0f, 2.5f, -80.0f));
+    platform4_2->setScale(Vector3(0.06f, 0.02f, 0.06f));  // 6x2x6 units
+    platform4_2->setPosition(Vector3(4.0f, 10.5f, -70.0f));  // Sharp left, +1.5 up (10.6 unit diagonal!)
     entities.push_back(platform4_2);
 
-    // Platform 4.3 - Diagonal jump left and up
+    // Platform 4.3 - Center return (recovery jump)
     EntityPlatform* platform4_3 = new EntityPlatform();
     platform4_3->mesh = Mesh::Get("data/meshes/box.ASE");
     platform4_3->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform4_3->texture = nullptr;
     platform4_3->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
-    platform4_3->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units
-    platform4_3->setPosition(Vector3(-3.0f, 3.5f, -85.0f));
+    platform4_3->setScale(Vector3(0.06f, 0.02f, 0.06f));  // 6x2x6 units
+    platform4_3->setPosition(Vector3(0.0f, 11.5f, -77.0f));  // Return to center, +1.0 up
     entities.push_back(platform4_3);
 
-    // Platform 4.4
-    EntityPlatform* platform4_4 = new EntityPlatform();
-    platform4_4->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform4_4->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
-    platform4_4->texture = nullptr;
-    platform4_4->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
-    platform4_4->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units
-    platform4_4->setPosition(Vector3(3.0f, 4.0f, -90.0f));
-    entities.push_back(platform4_4);
-
-    // Platform 4.5
-    EntityPlatform* platform4_5 = new EntityPlatform();
-    platform4_5->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform4_5->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
-    platform4_5->texture = nullptr;
-    platform4_5->color = Vector4(1.0f, 0.6f, 0.1f, 1.0f);  // Bright orange
-    platform4_5->setScale(Vector3(0.06f, 0.02f, 0.06f));  // 6x2x6 units
-    platform4_5->setPosition(Vector3(0.0f, 3.0f, -94.0f));
-    entities.push_back(platform4_5);
-
-    // Orb 3 in middle of precision zone
+    // Orb 3 - Reward for precision mastery
     EntityOrb* orb3 = new EntityOrb();
-    orb3->setPosition(Vector3(-3.0f, 4.5f, -85.0f));
+    orb3->setPosition(Vector3(0.0f, 13.5f, -77.0f));  // Above platform 4.3
     entities.push_back(orb3);
     orbs.push_back(orb3);
 
-    // ========== ZONE 5: FINAL CHALLENGE (Z=-100 to Z=-120) ==========
-    // Hardest jumps combining distance and height
-    // Platform 5.1
+    // ========== ZONE 5: VICTORY PLATFORM! ==========
+    // Large gold platform - you made it!
     EntityPlatform* platform5_1 = new EntityPlatform();
     platform5_1->mesh = Mesh::Get("data/meshes/box.ASE");
     platform5_1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
     platform5_1->texture = nullptr;
-    platform5_1->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
-    platform5_1->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units
-    platform5_1->setPosition(Vector3(-4.0f, 2.0f, -100.0f));  // 3 unit gap from Zone 4
+    platform5_1->color = Vector4(1.0f, 0.9f, 0.2f, 1.0f);  // Gold for victory!
+    platform5_1->setScale(Vector3(0.14f, 0.02f, 0.14f));  // 14x2x14 units - welcoming and large
+    platform5_1->setPosition(Vector3(0.0f, 12.5f, -85.0f));  // Return to center, +1.0 up
     entities.push_back(platform5_1);
 
-    // Platform 5.2 - Difficult diagonal jump
-    EntityPlatform* platform5_2 = new EntityPlatform();
-    platform5_2->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform5_2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
-    platform5_2->texture = nullptr;
-    platform5_2->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
-    platform5_2->setScale(Vector3(0.04f, 0.02f, 0.04f));  // 4x2x4 units - smallest!
-    platform5_2->setPosition(Vector3(5.0f, 3.5f, -105.0f));  // 9 unit horizontal jump!
-    entities.push_back(platform5_2);
-
-    // Platform 5.3 - High jump
-    EntityPlatform* platform5_3 = new EntityPlatform();
-    platform5_3->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform5_3->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
-    platform5_3->texture = nullptr;
-    platform5_3->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
-    platform5_3->setScale(Vector3(0.04f, 0.02f, 0.04f));  // 4x2x4 units
-    platform5_3->setPosition(Vector3(-3.0f, 4.8f, -110.0f));  // Near max height jump
-    entities.push_back(platform5_3);
-
-    // Platform 5.4
-    EntityPlatform* platform5_4 = new EntityPlatform();
-    platform5_4->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform5_4->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
-    platform5_4->texture = nullptr;
-    platform5_4->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
-    platform5_4->setScale(Vector3(0.05f, 0.02f, 0.05f));  // 5x2x5 units
-    platform5_4->setPosition(Vector3(4.0f, 4.5f, -115.0f));
-    entities.push_back(platform5_4);
-
-    // Platform 5.5 - Victory platform
-    EntityPlatform* platform5_5 = new EntityPlatform();
-    platform5_5->mesh = Mesh::Get("data/meshes/box.ASE");
-    platform5_5->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
-    platform5_5->texture = nullptr;
-    platform5_5->color = Vector4(1.0f, 0.3f, 0.3f, 1.0f);  // Bright red
-    platform5_5->setScale(Vector3(0.10f, 0.02f, 0.10f));  // 10x2x10 units - larger victory platform
-    platform5_5->setPosition(Vector3(0.0f, 5.0f, -120.0f));
-    entities.push_back(platform5_5);
-
-    // Final orb as reward
+    // Final orb - Tutorial complete!
     EntityOrb* orb4 = new EntityOrb();
-    orb4->setPosition(Vector3(0.0f, 6.0f, -120.0f));
+    orb4->setPosition(Vector3(0.0f, 14.5f, -85.0f));  // Above victory platform
     entities.push_back(orb4);
     orbs.push_back(orb4);
+
+    // ========== RESET SLABS (Safety boundaries) ==========
+    // Kill floor - catch falls
+    EntityResetSlab* slab_killfloor = new EntityResetSlab();
+    slab_killfloor->mesh = Mesh::Get("data/meshes/box.ASE");
+    slab_killfloor->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
+    slab_killfloor->color = Vector4(1.0f, 0.2f, 0.2f, 0.4f);  // Semi-transparent red
+    slab_killfloor->setScale(Vector3(0.50f, 0.01f, 0.50f));  // 50×1×50 units - large catch area
+    slab_killfloor->setPosition(Vector3(0.0f, -5.0f, -50.0f));  // Below platforms
+    reset_slabs.push_back(slab_killfloor);
+
+    // Right boundary wall
+    EntityResetSlab* slab_right = new EntityResetSlab();
+    slab_right->mesh = Mesh::Get("data/meshes/box.ASE");
+    slab_right->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
+    slab_right->color = Vector4(1.0f, 0.2f, 0.2f, 0.3f);  // Semi-transparent red
+    slab_right->setScale(Vector3(0.01f, 0.14f, 0.50f));  // 1×14×50 units - tall thin wall
+    slab_right->setPosition(Vector3(18.0f, 7.0f, -45.0f));  // Right side
+    reset_slabs.push_back(slab_right);
+
+    // Left boundary wall
+    EntityResetSlab* slab_left = new EntityResetSlab();
+    slab_left->mesh = Mesh::Get("data/meshes/box.ASE");
+    slab_left->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
+    slab_left->color = Vector4(1.0f, 0.2f, 0.2f, 0.3f);  // Semi-transparent red
+    slab_left->setScale(Vector3(0.01f, 0.14f, 0.50f));  // 1×14×50 units
+    slab_left->setPosition(Vector3(-18.0f, 7.0f, -45.0f));  // Left side
+    reset_slabs.push_back(slab_left);
+
+    // Back barrier - prevent backtracking
+    EntityResetSlab* slab_back = new EntityResetSlab();
+    slab_back->mesh = Mesh::Get("data/meshes/box.ASE");
+    slab_back->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
+    slab_back->color = Vector4(1.0f, 0.2f, 0.2f, 0.3f);  // Semi-transparent red
+    slab_back->setScale(Vector3(0.40f, 0.14f, 0.01f));  // 40×14×1 units
+    slab_back->setPosition(Vector3(0.0f, 7.0f, 15.0f));  // Behind start
+    reset_slabs.push_back(slab_back);
 
     // Play background music
     music_channel = Audio::Play("data/audio/stellar_drift.mp3", 0.5f, BASS_SAMPLE_LOOP);
@@ -441,11 +437,56 @@ void World::loadLevel(const LevelConfig& config)
     //clear current level (call clearLevel())
     clearLevel();
     
-    //based on config.type, call initTutorial() or initEmpty()
+    //based on config.type, call initTutorial(), initEmpty(), or load from data
     if(config.type == LevelConfig::TUTORIAL) {
         initTutorial();
     } else if(config.type == LevelConfig::EMPTY) {
         initEmpty();
+    } else if(config.type == LevelConfig::DATA) {
+        // Load level from JSON data (platforms, orbs, reset slabs)
+
+        // Create platforms from config
+        for (const auto& pdef : config.platforms) {
+            EntityPlatform* platform = new EntityPlatform();
+            platform->mesh = Mesh::Get("data/meshes/box.ASE");
+            platform->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
+            platform->color = pdef.color;
+
+            // Load texture if specified
+            if (!pdef.texture_path.empty()) {
+                platform->texture = Texture::Get(pdef.texture_path.c_str());
+            } else {
+                platform->texture = nullptr;
+            }
+
+            platform->setScale(pdef.scale);
+            platform->setPosition(pdef.position);
+            entities.push_back(platform);
+        }
+
+        // Create orbs from config
+        for (const auto& odef : config.orbs) {
+            EntityOrb* orb = new EntityOrb();
+            orb->setPosition(odef.position);
+            // Orbs use default rendering, color is handled internally
+            entities.push_back(orb);
+            orbs.push_back(orb);
+        }
+
+        // Create reset slabs from config
+        for (const auto& sdef : config.reset_slabs) {
+            EntityResetSlab* slab = new EntityResetSlab();
+            slab->mesh = Mesh::Get("data/meshes/box.ASE");
+            slab->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
+            slab->color = sdef.color;
+            slab->setScale(sdef.scale);
+            slab->setPosition(sdef.position);
+            reset_slabs.push_back(slab);
+        }
+
+        std::cout << "Loaded level from JSON data: " << config.platforms.size()
+                  << " platforms, " << config.orbs.size() << " orbs, "
+                  << config.reset_slabs.size() << " reset slabs" << std::endl;
     }
     //Set player position from config.player_start_position
     if(player) {
@@ -483,6 +524,12 @@ void World::clearLevel()
     // Clear orbs
     orbs.clear();
     orbs_collected = 0;
+
+    // Clear reset slabs
+    for (EntityResetSlab* slab : reset_slabs) {
+        delete slab;
+    }
+    reset_slabs.clear();
 
     // Stop music if playing
     if (music_channel) {

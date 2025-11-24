@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include "framework/utils.h"
+#include <fstream>
+#include <sstream>
 
 // Level configuration structure
 // Defines all properties that can vary between levels
@@ -18,8 +20,9 @@ struct LevelConfig {
 
     // Level initialization type
     enum LevelType {
-        TUTORIAL,    // Use existing initTutorial() with platforms
-        EMPTY        // Empty level for future design
+        TUTORIAL,    // Use existing initTutorial() with platforms (legacy)
+        EMPTY,       // Empty level for future design
+        DATA         // Load from JSON data (platforms, orbs, reset_slabs vectors)
     };
     LevelType type = EMPTY;
 
@@ -30,21 +33,30 @@ struct LevelConfig {
     std::string background_music;
     float music_volume = 0.5f;
 
-    // Future expansion: Platform and entity definitions
-    // Currently unused for empty levels
+    // Entity definitions (used when type == DATA)
     struct PlatformDef {
         Vector3 position;
         Vector3 scale;
         Vector4 color;
-        std::string texture_path;
+        std::string texture_path = "";  // Optional, empty for flat color
     };
     std::vector<PlatformDef> platforms;
 
     struct OrbDef {
         Vector3 position;
-        Vector4 color;
+        Vector4 color = Vector4(1.0f, 0.9f, 0.3f, 1.0f);  // Default gold color
     };
     std::vector<OrbDef> orbs;
+
+    struct ResetSlabDef {
+        Vector3 position;
+        Vector3 scale;
+        Vector4 color = Vector4(1.0f, 0.2f, 0.2f, 0.4f);  // Default red semi-transparent
+    };
+    std::vector<ResetSlabDef> reset_slabs;
+
+    // Static method to load configuration from JSON file
+    static LevelConfig loadFromJSON(const std::string& filepath);
 };
 
 #endif // LEVEL_CONFIG_H

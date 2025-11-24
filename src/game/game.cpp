@@ -37,10 +37,10 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	elapsed_time = 0.0f;
 	mouse_locked = true;  // Enable mouse-look by default
 
-	camera_state.distance = 10.0f;  // Optimal distance for platforming
+	camera_state.distance = 12.0f;  // Pulled back for wider view and better visibility
 	camera_state.yaw = float(M_PI);
-	camera_state.pitch = -0.3f;
-	camera_state.height_offset = 3.0f;  // Higher for better platform overview
+	camera_state.pitch = -0.4f;  // More top-down for clearer platform view
+	camera_state.height_offset = 2.0f;  // Lower to keep player centered in frame
 	camera_state.eye = Vector3(0.0f, 10.0f, -20.0f);  // Far back and up
 	camera_state.focus = Vector3(0.0f, 5.0f, 0.0f);  // Looking at player area
 

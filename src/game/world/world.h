@@ -11,6 +11,7 @@ class EntityPlayer;
 class EntitySkybox;
 class Camera;
 class EntityOrb;
+class EntityResetSlab;
 class World
 {
     public:
@@ -45,6 +46,7 @@ class World
     private:
         std::vector<Entity*> entities;
         std::vector<EntityOrb*> orbs;
+        std::vector<EntityResetSlab*> reset_slabs;
         EntityPlayer* player = nullptr;
         EntitySkybox* skybox = nullptr;
 

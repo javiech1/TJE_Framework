@@ -42,24 +42,10 @@ LevelConfig* LevelManager::getLevelByName(const std::string& name) {
     return nullptr;
 }
 
-// Level 1: Tutorial level with platforms and orbs
+// Level 1: Tutorial level - loaded from text file
 LevelConfig LevelManager::createTutorialLevel() {
-    LevelConfig config;
-
-    config.name = "Tutorial";
-    config.type = LevelConfig::TUTORIAL;  // Uses existing initTutorial()
-    config.gravity = 9.8f;  // Normal Earth gravity
-
-    // Default skybox (will use the default rocks/grass textures)
-    // Leave skybox_faces empty to use default
-
-    config.player_start_position = Vector3(0.0f, 2.0f, 0.0f);
-    config.background_music = "data/audio/stellar_drift.mp3";
-    config.music_volume = 0.5f;
-
-    // Platforms and orbs are created by initTutorial(), not here
-
-    return config;
+    // Load tutorial level from custom text format
+    return LevelConfig::loadFromJSON("data/levels/tutorial.txt");
 }
 
 // Level 2: Empty level with low gravity (moon-like)
