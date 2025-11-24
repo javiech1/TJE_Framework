@@ -10,7 +10,7 @@ EntityOrb::EntityOrb() : EntityMesh()
     isCollected = false;
     radius = 0.5f;
     rotation_angle = 0.0f;
-    scale_factor = 0.004f;
+    scale_factor = 0.05f;  // Visible collectible size (~4-6 units diameter)
     position = Vector3(0,0,0);
     color = Vector4(1.0f, 0.84f, 0.0f, 1.0f); // Gold color
     mesh = Mesh::Get("data/meshes/box.ASE");

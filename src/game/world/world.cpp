@@ -86,6 +86,12 @@ void World::render(Camera* camera)
         slab->render(camera);
     }
 
+    // Render orbs (collectibles)
+    for (EntityOrb* orb : orbs)
+    {
+        orb->render(camera);
+    }
+
     // UI Text - orb counter (now 4 orbs in tutorial)
     drawText(10, 35, "Orbs collected: " + std::to_string(orbs_collected) + "/" + std::to_string(orbs.size()), Vector3(1,1,1), 2);
 
@@ -273,7 +279,7 @@ void World::loadLevel(const LevelConfig& config)
         for (const auto& plat_def : config.platforms) {
             EntityPlatform* platform = new EntityPlatform();
             platform->mesh = Mesh::Get("data/meshes/box.ASE");
-            platform->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
+            platform->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
             platform->setPosition(plat_def.position);
             platform->setScale(plat_def.scale);
             platform->color = plat_def.color;
@@ -292,7 +298,7 @@ void World::loadLevel(const LevelConfig& config)
         for (const auto& slab_def : config.reset_slabs) {
             EntityResetSlab* slab = new EntityResetSlab();
             slab->mesh = Mesh::Get("data/meshes/box.ASE");
-            slab->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/flat.fs");
+            slab->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
             slab->setPosition(slab_def.position);
             slab->setScale(slab_def.scale);
             slab->color = slab_def.color;

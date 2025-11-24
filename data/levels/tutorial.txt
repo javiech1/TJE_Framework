@@ -26,10 +26,7 @@ platform: 0.0 12.5 -85.0 | 0.14 0.02 0.14 | 1.0 0.9 0.2 1.0
 # Orbs
 # Format: orb: pos_x pos_y pos_z
 
-orb: 8.0 4.0 -34.0
-orb: 8.0 10.0 -56.0
-orb: 0.0 13.5 -77.0
-orb: 0.0 14.5 -85.0
+orb: 0.0 2.0 -4.0
 
 # Reset Slabs
 # Format: reset_slab: pos_x pos_y pos_z | scale_x scale_y scale_z | r g b a
