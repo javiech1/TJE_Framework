@@ -1,4 +1,5 @@
 #include "entity_player.h"
+#include "entity_platform.h"
 #include "game/world/world.h"
 #include "framework/input.h"
 #include "game/game.h"
@@ -7,6 +8,32 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+
+// Helper: Sphere vs AABB collision (bypasses COLDET)
+// Returns true if collision, sets closest_point and penetration
+static bool sphereVsAABB(const Vector3& sphere_center, float sphere_radius,
+                         const Vector3& box_center, const Vector3& box_half_size,
+                         Vector3& closest_point, float& penetration)
+{
+    // Find closest point on AABB to sphere center
+    closest_point.x = std::max(box_center.x - box_half_size.x,
+                               std::min(sphere_center.x, box_center.x + box_half_size.x));
+    closest_point.y = std::max(box_center.y - box_half_size.y,
+                               std::min(sphere_center.y, box_center.y + box_half_size.y));
+    closest_point.z = std::max(box_center.z - box_half_size.z,
+                               std::min(sphere_center.z, box_center.z + box_half_size.z));
+
+    // Calculate distance from sphere center to closest point
+    Vector3 diff = sphere_center - closest_point;
+    float distance_sq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+
+    if (distance_sq < sphere_radius * sphere_radius) {
+        float distance = sqrt(distance_sq);
+        penetration = sphere_radius - distance;
+        return true;
+    }
+    return false;
+}
 
 EntityPlayer::EntityPlayer() : EntityMesh()
 {
@@ -43,17 +70,14 @@ void EntityPlayer::render(Camera* camera)
 
 void EntityPlayer::update(float delta_time)
 {
-    // 1. Handle input (sets movement velocity and jump request)
-    handleInput(delta_time);
+    // NOTE: Input is handled by World::update() BEFORE checkCollisions()
+    // This ensures is_grounded is correct when applyPhysics() runs
 
-    // 2. Apply physics (gravity, movement, friction)
+    // 1. Apply physics (gravity, movement, friction)
+    // is_grounded was updated by checkCollisions() called from World
     applyPhysics(delta_time);
 
-    // 3. Check and resolve collisions
-    // Note: World passes entities vector via checkCollisions()
-    // This will be called from World::update()
-
-    // 4. Smooth rotation towards target
+    // 2. Smooth rotation towards target
     float rotation_speed = 15.0f;
     float yaw_diff = target_yaw - current_yaw;
 
@@ -168,27 +192,22 @@ void EntityPlayer::updateModelMatrix()
     model.scale(player_scale, player_scale, player_scale);
 }
 
-void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
+// ============================================================================
+// detectGround() - Updates is_grounded state BEFORE physics
+// Called BEFORE applyPhysics() so friction/jumping work correctly
+// ============================================================================
+void EntityPlayer::detectGround(const std::vector<Entity*>& entities)
 {
-    float player_radius = player_scale * 0.5f;
-    // Use member variable position directly, not a local copy
+    float collision_radius = player_scale * COLLISION_RADIUS_MULT;
 
     // Reset grounded state
     is_grounded = false;
 
-    // ============================================================================
-    // PHASE 1: GROUND DETECTION using raycasting (robust for platformers)
-    // ============================================================================
-    // Cast rays downward from multiple points to detect ground even on edges
-
     Vector3 ray_dir(0, -1, 0);  // Straight down
-
-    // Use collision radius for ray distance (sphere-based detection)
-    // 1.5x radius provides appropriate detection range
-    float ray_distance = player_radius * 1.5f;
+    float ray_distance = collision_radius * 1.5f;
 
     // Check 5 points: center + 4 edge positions (for edge detection)
-    float offset = player_radius * 0.85f;  // Slightly inside radius to avoid false positives
+    float offset = collision_radius * 0.85f;
     Vector3 ray_offsets[] = {
         Vector3(0, 0, 0),              // Center
         Vector3(offset, 0, 0),         // Right
@@ -203,98 +222,156 @@ void EntityPlayer::checkCollisions(const std::vector<Entity*>& entities)
 
         Vector3 ray_origin = position + offset_vec;
 
-        // Use framework raycasting for ground detection
+        if(Collision::TestSceneRay(entities, ray_origin, ray_dir, ground_hit,
+                                    eCollisionFilter::FLOOR, true, ray_distance)) {
+            if(ground_hit.collided && ground_hit.distance <= ray_distance) {
+                is_grounded = true;
+                break; // Found ground
+            }
+        }
+    }
+}
+
+// ============================================================================
+// resolveCollisions() - Resolves penetrations AFTER physics
+// Called AFTER applyPhysics() to push player out of geometry
+// ============================================================================
+void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
+{
+    float collision_radius = player_scale * COLLISION_RADIUS_MULT;
+
+    // --- GROUND SNAP (vertical correction) ---
+    Vector3 ray_dir(0, -1, 0);
+    float ray_distance = collision_radius * 1.5f;
+    float offset = collision_radius * 0.85f;
+
+    Vector3 ray_offsets[] = {
+        Vector3(0, 0, 0),
+        Vector3(offset, 0, 0),
+        Vector3(-offset, 0, 0),
+        Vector3(0, 0, offset),
+        Vector3(0, 0, -offset)
+    };
+
+    for(const Vector3& offset_vec : ray_offsets) {
+        sCollisionData ground_hit;
+        ground_hit.distance = std::numeric_limits<float>::max();
+
+        Vector3 ray_origin = position + offset_vec;
+
         if(Collision::TestSceneRay(entities, ray_origin, ray_dir, ground_hit,
                                     eCollisionFilter::FLOOR, true, ray_distance)) {
             if(ground_hit.collided && ground_hit.distance <= ray_distance) {
                 is_grounded = true;
 
-                // Calculate correct ground position using collision radius (sphere-based)
-                // Player center should be at: surface + radius (so sphere bottom touches surface)
-                float ground_y = ground_hit.col_point.y + player_radius;
-
-                // Bidirectional snap to handle overshooting in either direction
-                // This prevents both levitation and falling through platforms
+                float ground_y = ground_hit.col_point.y + collision_radius;
                 float height_error = fabs(position.y - ground_y);
-                if(height_error < 0.1f && velocity.y < 0.0f) {
-                    position.y = ground_y;
-                    velocity.y = 0;  // Zero velocity after snapping
-                }
 
-                break; // Found ground, no need to check more rays
+                if(height_error < 0.1f && velocity.y <= 0.0f) {
+                    position.y = ground_y;
+                    velocity.y = 0;
+                }
+                break;
             }
         }
     }
 
-    // ============================================================================
-    // PHASE 2: WALL/CEILING COLLISION using sphere collision
-    // ============================================================================
-    // Handle lateral collisions (walls) and overhead collisions (ceilings)
-    // Ground collisions are explicitly skipped since they're handled above
+    // --- WALL/CEILING COLLISION using AABB (bypasses COLDET bugs) ---
+    // COLDET's rayCollision and sphereCollision don't work for horizontal contact
+    // Solution: Use manual sphere-vs-AABB collision for EntityPlatform
 
-    const int max_iterations = 3;  // Multiple passes to resolve complex collisions
-
+    // Multiple iterations to resolve complex corner cases
+    const int max_iterations = 3;
     for(int iter = 0; iter < max_iterations; ++iter)
     {
         bool collision_found = false;
 
-        for(Entity* entity : entities) {
-            if(entity == this) continue;
+        // Test AABB collision against all platforms
+        for(Entity* entity : entities)
+        {
+            // Only process EntityPlatform (skip player, orbs, etc.)
+            EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
+            if (!platform) continue;
 
-            // Use framework sphere collision for walls/ceilings
-            std::vector<sCollisionData> collisions;
-            if(Collision::TestEntitySphere(entity, player_radius, position,
-                                           collisions, eCollisionFilter::ALL)) {
-                for(const sCollisionData& col : collisions) {
-                    if(!col.collided) continue;
+            // Get platform bounds
+            Vector3 box_center = platform->model.getTranslation();
+            Vector3 box_half_size = platform->getHalfSize();
 
-                    // SKIP ground collisions - those are handled by raycast above
-                    // This prevents the bouncing issue
-                    if(col.col_normal.y > GROUND_NORMAL_THRESHOLD) {
-                        continue;
+            // Only inflate AABB when player is BELOW the platform surface
+            // This prevents false "wall collisions" when walking ON TOP of platforms
+            float platform_top = box_center.y + box_half_size.y;
+            bool player_above_platform = position.y > platform_top + 0.01f;
+
+            if (!player_above_platform) {
+                // Inflate AABB vertically to catch lateral collisions with thin platforms
+                float min_half_height = collision_radius + 0.5f;
+                if (box_half_size.y < min_half_height) {
+                    box_half_size.y = min_half_height;
+                }
+            }
+
+            // Test sphere-vs-AABB collision
+            Vector3 closest_point;
+            float penetration;
+
+            if (sphereVsAABB(position, collision_radius, box_center, box_half_size,
+                           closest_point, penetration))
+            {
+                // Calculate push direction (from closest point toward player)
+                Vector3 push_direction = position - closest_point;
+
+                // Handle edge case: player center inside box
+                if (push_direction.length() < 0.001f) {
+                    // Push toward nearest face
+                    Vector3 to_center = position - box_center;
+                    float abs_x = fabs(to_center.x);
+                    float abs_y = fabs(to_center.y);
+                    float abs_z = fabs(to_center.z);
+
+                    if (abs_x > abs_y && abs_x > abs_z) {
+                        push_direction = Vector3(to_center.x > 0 ? 1 : -1, 0, 0);
+                    } else if (abs_y > abs_z) {
+                        push_direction = Vector3(0, to_center.y > 0 ? 1 : -1, 0);
+                    } else {
+                        push_direction = Vector3(0, 0, to_center.z > 0 ? 1 : -1);
+                    }
+                    penetration = collision_radius;  // Full radius penetration
+                } else {
+                    push_direction.normalize();
+                }
+
+                // Separate ground/wall/ceiling based on push direction
+                if (push_direction.y > GROUND_NORMAL_THRESHOLD)
+                {
+                    // Ground collision - handled by ground snap
+                    is_grounded = true;
+                }
+                else if (push_direction.y < -GROUND_NORMAL_THRESHOLD)
+                {
+                    // Ceiling collision
+                    position += push_direction * (penetration + 0.001f);
+                    if (velocity.y > 0) velocity.y = 0;
+                    collision_found = true;
+                }
+                else
+                {
+                    // Wall collision (horizontal)
+                    position += push_direction * (penetration + 0.001f);
+
+                    // Slide along wall
+                    float v_dot_n = velocity.dot(push_direction);
+                    if (v_dot_n < 0) {
+                        velocity -= push_direction * v_dot_n;
                     }
 
-                    // Correct normal orientation for sphere collision
-                    // Calculate direction from collision point to sphere center
-                    Vector3 to_center = position - col.col_point;
-                    Vector3 collision_normal = col.col_normal;
-
-                    // Ensure normal points toward sphere center (outward from surface)
-                    // If dot product is negative, normal points away from center (inverted)
-                    if(collision_normal.dot(to_center) < 0) {
-                        collision_normal = collision_normal * -1.0f;
-                    }
-
-                    float penetration = player_radius - col.distance;
-
-                    // Only resolve if there's actual penetration
-                    if(penetration > 0.001f) {
-                        // Push out of collision
-                        position += collision_normal * penetration;
-
-                        // Project velocity to slide along surface (removes velocity toward surface)
-                        float v_dot_n = velocity.dot(collision_normal);
-                        if(v_dot_n < 0) {
-                            velocity -= collision_normal * v_dot_n;
-                        }
-
-                        // Ceiling detection (overhead collision)
-                        if(collision_normal.y < -GROUND_NORMAL_THRESHOLD) {
-                            if(velocity.y > 0) {
-                                velocity.y = 0;  // Stop upward movement when hitting ceiling
-                            }
-                        }
-
-                        collision_found = true;
-                        break; // Handle one collision per entity per iteration
-                    }
+                    collision_found = true;
                 }
             }
         }
 
-        if(!collision_found) break;  // No more collisions to resolve
+        if (!collision_found) break;
     }
 
-    // Position changes will be applied by updateModelMatrix() in update()
-    // No need to touch model matrix here - it would destroy scale and rotation
+    // Sync model matrix with corrected position
+    updateModelMatrix();
 }

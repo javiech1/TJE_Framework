@@ -8,7 +8,6 @@ class Texture;
 class EntityOrb : public EntityCollider {
     private:
         bool isCollected = false;
-        float radius = 0.5f;
         float rotation_angle = 0.0f;
         float scale_factor = 1.5f;  // Visual scale for rendering
         Vector3 position;

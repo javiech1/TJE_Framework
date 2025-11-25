@@ -30,6 +30,8 @@ bool Collision::TestEntitySphere(Entity* e, float radius, const Vector3& center,
 		return false;
 	}
 
+	size_t collisions_before = collisions.size();
+
 	if (!collider->isInstanced)
 	{
 		TestEntitySphereWithModel(collider, collider->model, -1, radius, center, collisions);
@@ -42,7 +44,7 @@ bool Collision::TestEntitySphere(Entity* e, float radius, const Vector3& center,
 		}
 	}
 
-	return !collisions.empty();
+	return collisions.size() > collisions_before;
 }
 
 bool Collision::TestEntityRayWithModel(EntityCollider* collider, const Matrix44& m, const Vector3& origin, const Vector3& direction, sCollisionData& collision_data, float max_ray_dist)
@@ -96,7 +98,7 @@ bool Collision::TestEntityRay(Entity* e, const Vector3& origin, const Vector3& d
 	return collided;
 }
 
-bool Collision::TestSceneRay(const std::vector<Entity*>& entities, const Vector3& origin, const Vector3& direction, sCollisionData& collision_data, 
+bool Collision::TestSceneRay(const std::vector<Entity*>& entities, const Vector3& origin, const Vector3& direction, sCollisionData& collision_data,
 													int layer, bool closest, float max_ray_dist)
 {
 	bool collided = false;

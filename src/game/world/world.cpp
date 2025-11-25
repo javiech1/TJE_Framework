@@ -139,12 +139,30 @@ void World::render(Camera* camera)
 
 void World::update(float delta_time)
 {
-    // SIMPLIFIED UPDATE ORDER:
+    // CORRECT UPDATE ORDER for platformer physics:
+    // 1. Input - what does the player want to do?
+    // 2. Detect ground - is_grounded for friction/jumping
+    // 3. Physics - apply movement with correct is_grounded
+    // 4. Resolve collisions - push out of geometry AFTER moving
 
-    // 1. Update all entities (each handles its own input, physics, and movement)
+    // 1. Handle player input
+    player->handleInput(delta_time);
+
+    // 2. Detect ground BEFORE physics (so is_grounded is correct)
+    player->detectGround(entities);
+
+    // 3. Apply physics (movement, gravity, friction with correct is_grounded)
+    player->update(delta_time);
+
+    // 4. Resolve collisions AFTER physics (push out of penetrations)
+    player->resolveCollisions(entities);
+
+    // Update other entities (not player - already updated above)
     for (Entity* entity : entities)
     {
-        entity->update(delta_time);
+        if (entity != player) {
+            entity->update(delta_time);
+        }
     }
 
     // Update reset slabs (for pulsing animation)
@@ -152,9 +170,6 @@ void World::update(float delta_time)
     {
         slab->update(delta_time);
     }
-
-    // 2. Check collisions - called separately because it needs access to all entities
-    player->checkCollisions(entities);
 
     // Check if player has fallen below the world
     // Threshold lowered to -20.0f to avoid accidental resets on lower platforms
@@ -166,7 +181,7 @@ void World::update(float delta_time)
 
     // Check reset slab collisions
     for (EntityResetSlab* slab : reset_slabs) {
-        if (slab->collidesWithPlayer(player->getPosition(), player->getScale() * 0.5f)) {
+        if (slab->collidesWithPlayer(player->getPosition(), player->getCollisionRadius())) {
             std::cout << "Hit reset slab! Restarting level..." << std::endl;
             reset();
             return; // Skip rest of update this frame
@@ -180,9 +195,9 @@ void World::update(float delta_time)
             Vector3 player_pos = player->getPosition();
             Vector3 orb_pos = orb->getPosition();
 
-            // Calculate collision radii
-            float player_radius = player->getScale() * 0.5f;  // 0.4 * 0.5 = 0.2
-            float orb_radius = orb->getRadius();  // Gets from orb's scale_factor
+            // Calculate collision radii using unified method
+            float player_radius = player->getCollisionRadius();
+            float orb_radius = orb->getRadius();
             float collection_distance = player_radius + orb_radius;
 
             // Check distance between centers

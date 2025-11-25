@@ -20,6 +20,5 @@ class EntityResetSlab : public EntityCollider {
         virtual void update(float delta_time) override;
         void setScale(Vector3 dimensions);
         void setPosition(const Vector3& new_position);
-        Vector3 getHalfSize() const { return half_size; }
         bool collidesWithPlayer(const Vector3& player_pos, float player_radius) const;
 };

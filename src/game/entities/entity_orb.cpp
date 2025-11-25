@@ -8,7 +8,6 @@
 EntityOrb::EntityOrb() : EntityCollider()
 {
     isCollected = false;
-    radius = 0.5f;
     rotation_angle = 0.0f;
     scale_factor = 1.5f;  // Radius 1 (Diameter 2) * 2.5 = 5 units
     position = Vector3(0,0,0);

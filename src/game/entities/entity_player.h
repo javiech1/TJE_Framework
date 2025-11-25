@@ -25,6 +25,7 @@ class EntityPlayer : public EntityMesh {
 
         // Collision constants
         static constexpr float GROUND_NORMAL_THRESHOLD = 0.7f; // Normal.y threshold to consider surface as ground
+        static constexpr float COLLISION_RADIUS_MULT = 0.5f;   // Unified collision radius multiplier
 
         void updateModelMatrix();
 
@@ -42,7 +43,11 @@ class EntityPlayer : public EntityMesh {
         void setWorld(World* w) { world = w; }
         Vector3 getPosition() const { return position; }
         float getScale() const { return player_scale; }
+        float getCollisionRadius() const { return player_scale * COLLISION_RADIUS_MULT; }
         void resetVelocity() { velocity = Vector3(0, 0, 0); }
-        void checkCollisions(const std::vector<Entity*>& entities);
+
+        // Collision methods - separated for correct execution order
+        void detectGround(const std::vector<Entity*>& entities);    // Updates is_grounded only
+        void resolveCollisions(const std::vector<Entity*>& entities); // Resolves penetrations
 
 };
