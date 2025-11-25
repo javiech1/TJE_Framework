@@ -8,6 +8,7 @@
 #include "game/entities/entity_platform.h"
 #include "game/entities/entity_orb.h"
 #include "game/entities/entity_reset_slab.h"
+#include "game/entities/entity_obstacle.h"
 #include "framework/utils.h"
 #include "framework/audio.h"
 #include "framework/collision.h"
@@ -92,48 +93,17 @@ void World::render(Camera* camera)
         orb->render(camera);
     }
 
-    // UI Text - orb counter (now 4 orbs in tutorial)
-    drawText(10, 35, "Orbs collected: " + std::to_string(orbs_collected) + "/" + std::to_string(orbs.size()), Vector3(1,1,1), 2);
-
-    // Tutorial instructions based on player position (Z-axis progression)
-    if (player) {
-        float playerZ = player->getPosition().z;
-        Vector3 textColor(1.0f, 1.0f, 0.0f); // Yellow for instructions
-
-        if (playerZ > -15.0f) {
-            // Zone 1: Movement
-            drawText(300, 200, "Use WASD to move around", textColor, 2);
-            drawText(280, 230, "Walk to the edge and continue", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
-        }
-        else if (playerZ > -37.0f) {
-            // Zone 2: Basic jumping (ends at Z=-34)
-            drawText(300, 200, "Press SPACE to jump", textColor, 2);
-            drawText(260, 230, "Jump between the green platforms", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
-        }
-        else if (playerZ > -58.0f) {
-            // Zone 3: Vertical climbing (ends at Z=-56)
-            drawText(280, 200, "Jump upward to climb", textColor, 2);
-            drawText(260, 230, "Follow the yellow platforms up", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
-        }
-        else if (playerZ > -79.0f) {
-            // Zone 4: Precision (ends at Z=-77)
-            drawText(300, 200, "Precision jumps!", textColor, 2);
-            drawText(240, 230, "These platforms are smaller!", Vector3(1.0f, 0.5f, 0.2f), 1.5f);
-        }
-        else if (playerZ > -87.0f) {
-            // Zone 5: Victory approach (ends at Z=-85)
-            drawText(280, 200, "Final jump to victory!", Vector3(1.0f, 0.9f, 0.2f), 2);
-            drawText(260, 230, "Jump to the gold platform!", Vector3(0.8f, 0.8f, 0.8f), 1.5f);
-        }
-        else {
-            // Completed!
-            drawText(280, 200, "Tutorial Complete!", Vector3(0.2f, 1.0f, 0.2f), 3);
-            drawText(260, 240, "Press R to restart", Vector3(0.8f, 0.8f, 0.8f), 2);
-        }
+    // Render obstacles (translucent - rendered last for correct blending)
+    for (EntityObstacle* obs : obstacles)
+    {
+        obs->render(camera);
     }
 
-    // Always show controls at bottom
-    drawText(10, 560, "Controls: WASD=Move  SPACE=Jump  R=Reset", Vector3(0.7f, 0.7f, 0.7f), 1.5f);
+    // UI Text - orb counter
+    drawText(10, 35, "Orbs collected: " + std::to_string(orbs_collected) + "/" + std::to_string(orbs.size()), Vector3(1,1,1), 2);
+
+    // Minimal controls hint (tutorial is intuitive)
+    drawText(10, 560, "WASD=Move  SPACE=Jump  R=Reset", Vector3(0.5f, 0.5f, 0.5f), 1.5f);
 
 }
 
@@ -171,10 +141,16 @@ void World::update(float delta_time)
         slab->update(delta_time);
     }
 
+    // Update obstacles (movement animation)
+    for (EntityObstacle* obs : obstacles)
+    {
+        obs->update(delta_time);
+    }
+
     // Check if player has fallen below the world
     // Threshold lowered to -20.0f to avoid accidental resets on lower platforms
     if (player->getPosition().y < -20.0f) {
-        std::cout << "Player fell! Restarting level..." << std::endl;
+        std::cout << "Player fell! Respawning..." << std::endl;
         reset();
         return; // Skip rest of update this frame
     }
@@ -182,13 +158,22 @@ void World::update(float delta_time)
     // Check reset slab collisions
     for (EntityResetSlab* slab : reset_slabs) {
         if (slab->collidesWithPlayer(player->getPosition(), player->getCollisionRadius())) {
-            std::cout << "Hit reset slab! Restarting level..." << std::endl;
+            std::cout << "Hit reset slab! Respawning..." << std::endl;
             reset();
             return; // Skip rest of update this frame
         }
     }
 
-    // 4. Check orb collection - Simple sphere-to-sphere collision
+    // Check obstacle collisions
+    for (EntityObstacle* obs : obstacles) {
+        if (obs->collidesWithPlayer(player->getPosition(), player->getCollisionRadius())) {
+            std::cout << "Hit obstacle! Respawning..." << std::endl;
+            reset();
+            return; // Skip rest of update this frame
+        }
+    }
+
+    // Check orb collection - Simple sphere-to-sphere collision
     for (EntityOrb* orb : orbs) {
         if(!orb->getIsCollected()) {
             // Get positions
@@ -206,7 +191,12 @@ void World::update(float delta_time)
             if (distance < collection_distance) {
                 orb->collect();
                 orbs_collected++;
-                std::cout << "Orb collected! (" << orbs_collected << "/" << orbs.size() << ")" << std::endl;
+
+                // Update checkpoint to orb position
+                last_checkpoint = orb_pos;
+                last_checkpoint.y += 1.5f;  // Spawn slightly above orb
+
+                std::cout << "Checkpoint! Orb collected (" << orbs_collected << "/" << orbs.size() << ")" << std::endl;
             }
         }
     }
@@ -262,7 +252,7 @@ void World::clearLevel()
         }
     }
 
-    // Clear orbs and reset slabs
+    // Clear orbs, reset slabs, and obstacles
     for (EntityOrb* orb : orbs) {
         delete orb;
     }
@@ -272,6 +262,11 @@ void World::clearLevel()
         delete slab;
     }
     reset_slabs.clear();
+
+    for (EntityObstacle* obs : obstacles) {
+        delete obs;
+    }
+    obstacles.clear();
 
     orbs_collected = 0;
 }
@@ -296,7 +291,7 @@ void World::loadLevel(const LevelConfig& config)
         for (const auto& plat_def : config.platforms) {
             EntityPlatform* platform = new EntityPlatform();
             platform->mesh = Mesh::Get("data/meshes/box.ASE");
-            
+
             // Ensure collision model is created for the mesh
             if (platform->mesh && !platform->mesh->collision_model) {
                 platform->mesh->createCollisionModel();
@@ -306,6 +301,17 @@ void World::loadLevel(const LevelConfig& config)
             platform->setPosition(plat_def.position);
             platform->setScale(plat_def.scale);
             platform->color = plat_def.color;
+
+            // Configure movement if specified
+            if (plat_def.movement_type == "linear") {
+                platform->setLinearMovement(plat_def.movement_start, plat_def.movement_end,
+                                           plat_def.movement_speed, plat_def.movement_phase);
+            }
+            else if (plat_def.movement_type == "circular") {
+                platform->setCircularMovement(plat_def.orbit_center, plat_def.orbit_radius,
+                                             plat_def.movement_speed, plat_def.movement_phase);
+            }
+
             entities.push_back(platform);
         }
 
@@ -328,11 +334,38 @@ void World::loadLevel(const LevelConfig& config)
             reset_slabs.push_back(slab);
         }
 
+        // Load obstacles from config
+        for (const auto& obs_def : config.obstacles) {
+            EntityObstacle* obstacle = new EntityObstacle();
+            obstacle->setScale(obs_def.scale);
+            obstacle->color = obs_def.color;
+
+            // Configure movement
+            if (obs_def.movement_type == "linear") {
+                obstacle->setLinearMovement(obs_def.movement_start, obs_def.movement_end,
+                                           obs_def.movement_speed, obs_def.movement_phase);
+            }
+            else if (obs_def.movement_type == "circular") {
+                obstacle->setCircularMovement(obs_def.orbit_center, obs_def.orbit_radius,
+                                             obs_def.movement_speed, obs_def.movement_phase);
+            }
+            else {
+                obstacle->setPosition(obs_def.position);
+            }
+
+            obstacles.push_back(obstacle);
+        }
+
         std::cout << "Loaded level from data file" << std::endl;
         std::cout << "  Platforms: " << config.platforms.size() << std::endl;
         std::cout << "  Orbs: " << config.orbs.size() << std::endl;
         std::cout << "  Reset Slabs: " << config.reset_slabs.size() << std::endl;
+        std::cout << "  Obstacles: " << config.obstacles.size() << std::endl;
     }
+
+    // Initialize checkpoint system
+    player_start = config.player_start_position;
+    last_checkpoint = config.player_start_position;
 
     // Place player at configured position, let physics handle landing
     if (player) {
@@ -354,7 +387,18 @@ void World::loadLevel(const LevelConfig& config)
 
 void World::reset()
 {
-    // Reload the current level configuration
+    // Reset player to last checkpoint (soft reset)
+    if (player) {
+        player->setPosition(last_checkpoint);
+        player->resetVelocity();
+    }
+    // Don't reset collected orbs - they stay collected
+    std::cout << "Respawn at checkpoint!" << std::endl;
+}
+
+void World::fullReset()
+{
+    // Full level restart - reload everything
     loadLevel(current_config);
-    std::cout << "Level reset!" << std::endl;
+    std::cout << "Full level reset!" << std::endl;
 }

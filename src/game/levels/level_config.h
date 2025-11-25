@@ -39,6 +39,15 @@ struct LevelConfig {
         Vector3 scale;
         Vector4 color;
         std::string texture_path = "";  // Optional, empty for flat color
+
+        // Movement parameters (optional)
+        std::string movement_type = "none";  // "none", "linear", "circular"
+        Vector3 movement_start;              // For linear: start position
+        Vector3 movement_end;                // For linear: end position
+        float movement_speed = 1.0f;         // Speed multiplier
+        float movement_phase = 0.0f;         // Starting phase
+        float orbit_radius = 0.0f;           // For circular: orbit radius
+        Vector3 orbit_center;                // For circular: center point
     };
     std::vector<PlatformDef> platforms;
 
@@ -54,6 +63,22 @@ struct LevelConfig {
         Vector4 color = Vector4(1.0f, 0.2f, 0.2f, 0.4f);  // Default red semi-transparent
     };
     std::vector<ResetSlabDef> reset_slabs;
+
+    struct ObstacleDef {
+        Vector3 position;
+        Vector3 scale;
+        Vector4 color = Vector4(1.0f, 0.2f, 0.2f, 0.4f);  // Default red translucent
+
+        // Movement parameters (required for obstacles)
+        std::string movement_type = "linear";  // "linear" or "circular"
+        Vector3 movement_start;
+        Vector3 movement_end;
+        float movement_speed = 1.0f;
+        float movement_phase = 0.0f;
+        float orbit_radius = 0.0f;
+        Vector3 orbit_center;
+    };
+    std::vector<ObstacleDef> obstacles;
 
     // Static method to load configuration from JSON file
     static LevelConfig loadFromJSON(const std::string& filepath);

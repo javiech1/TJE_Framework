@@ -12,6 +12,8 @@ class EntitySkybox;
 class Camera;
 class EntityOrb;
 class EntityResetSlab;
+class EntityObstacle;
+
 class World
 {
     public:
@@ -32,7 +34,8 @@ class World
         void loadLevel(const LevelConfig& config);
         void clearLevel();
         void initEmpty();    //empty level for placeholders
-        void reset();  // Reset world to initial state
+        void reset();       // Reset to last checkpoint
+        void fullReset();   // Full level restart (all orbs, start position)
 
         // Gravity system
         float getGravity() const { return gravity_value; }
@@ -46,6 +49,7 @@ class World
         std::vector<Entity*> entities;
         std::vector<EntityOrb*> orbs;
         std::vector<EntityResetSlab*> reset_slabs;
+        std::vector<EntityObstacle*> obstacles;
         EntityPlayer* player = nullptr;
         EntitySkybox* skybox = nullptr;
 
@@ -54,4 +58,8 @@ class World
         HCHANNEL music_channel = 0;  // Background music channel
 
         LevelConfig current_config;  // Store current level configuration
+
+        // Checkpoint system
+        Vector3 player_start;     // Original start position
+        Vector3 last_checkpoint;  // Last collected orb position (respawn point)
 };

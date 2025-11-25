@@ -248,6 +248,105 @@ LevelConfig LevelConfig::loadFromJSON(const std::string& filepath) {
                 plat.scale = scale;
                 plat.color = color;
                 plat.texture_path = "";  // No texture support in text format yet
+                plat.movement_type = "none";  // Static platform
+                config.platforms.push_back(plat);
+            }
+        }
+        else if (key == "moving_platform") {
+            // Format: position | scale | movement_type params | speed phase
+            // Linear:   x y z | sx sy sz | linear ex ey ez | speed phase
+            // Circular: x y z | sx sy sz | circular radius | speed phase
+            int pipe_count = countPipes(value);
+            if (pipe_count != 3) {
+                std::cerr << "Error: Line " << line_number << " (moving_platform): Expected 3 pipes '|', found "
+                          << pipe_count << std::endl;
+                error_count++;
+                continue;
+            }
+
+            PlatformDef plat;
+
+            // Split by | delimiter
+            std::stringstream ss(value);
+            std::string position_str, scale_str, movement_str, speed_str;
+
+            std::getline(ss, position_str, '|');
+            std::getline(ss, scale_str, '|');
+            std::getline(ss, movement_str, '|');
+            std::getline(ss, speed_str, '|');
+
+            position_str = trim(position_str);
+            scale_str = trim(scale_str);
+            movement_str = trim(movement_str);
+            speed_str = trim(speed_str);
+
+            bool valid = true;
+            Vector3 pos, scale;
+
+            if (!parseVector3(position_str, pos, line_number, "moving_platform position")) {
+                valid = false;
+                error_count++;
+            }
+
+            if (!parseVector3(scale_str, scale, line_number, "moving_platform scale")) {
+                valid = false;
+                error_count++;
+            }
+
+            // Parse movement type and parameters
+            std::stringstream move_ss(movement_str);
+            std::string move_type;
+            move_ss >> move_type;
+
+            if (move_type == "linear") {
+                plat.movement_type = "linear";
+                float ex, ey, ez;
+                move_ss >> ex >> ey >> ez;
+                if (move_ss.fail()) {
+                    std::cerr << "Error: Line " << line_number << " (moving_platform): Linear requires end position 'linear ex ey ez'" << std::endl;
+                    valid = false;
+                    error_count++;
+                } else {
+                    plat.movement_start = pos;  // Start at initial position
+                    plat.movement_end = Vector3(ex, ey, ez);
+                }
+            }
+            else if (move_type == "circular") {
+                plat.movement_type = "circular";
+                float radius;
+                move_ss >> radius;
+                if (move_ss.fail()) {
+                    std::cerr << "Error: Line " << line_number << " (moving_platform): Circular requires radius 'circular radius'" << std::endl;
+                    valid = false;
+                    error_count++;
+                } else {
+                    plat.orbit_center = pos;  // Center at initial position
+                    plat.orbit_radius = radius;
+                }
+            }
+            else {
+                std::cerr << "Error: Line " << line_number << " (moving_platform): Unknown movement type '" << move_type << "'. Use 'linear' or 'circular'" << std::endl;
+                valid = false;
+                error_count++;
+            }
+
+            // Parse speed and phase
+            std::stringstream speed_ss(speed_str);
+            float speed, phase;
+            speed_ss >> speed >> phase;
+            if (speed_ss.fail()) {
+                std::cerr << "Error: Line " << line_number << " (moving_platform): Speed section requires 'speed phase'" << std::endl;
+                valid = false;
+                error_count++;
+            } else {
+                plat.movement_speed = speed;
+                plat.movement_phase = phase;
+            }
+
+            if (valid) {
+                plat.position = pos;
+                plat.scale = scale;
+                plat.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);  // White color for moving platforms
                 config.platforms.push_back(plat);
             }
         }
@@ -322,6 +421,100 @@ LevelConfig LevelConfig::loadFromJSON(const std::string& filepath) {
                 config.reset_slabs.push_back(slab);
             }
         }
+        else if (key == "obstacle") {
+            // Format: position | scale | movement_type params | speed
+            // Linear:   x y z | sx sy sz | linear sx sy sz ex ey ez | speed
+            // Circular: x y z | sx sy sz | circular cx cy cz radius | speed
+            int pipe_count = countPipes(value);
+            if (pipe_count != 3) {
+                std::cerr << "Error: Line " << line_number << " (obstacle): Expected 3 pipes '|', found "
+                          << pipe_count << std::endl;
+                error_count++;
+                continue;
+            }
+
+            ObstacleDef obs;
+
+            // Split by | delimiter
+            std::stringstream ss(value);
+            std::string position_str, scale_str, movement_str, speed_str;
+
+            std::getline(ss, position_str, '|');
+            std::getline(ss, scale_str, '|');
+            std::getline(ss, movement_str, '|');
+            std::getline(ss, speed_str, '|');
+
+            position_str = trim(position_str);
+            scale_str = trim(scale_str);
+            movement_str = trim(movement_str);
+            speed_str = trim(speed_str);
+
+            bool valid = true;
+            Vector3 pos, scale;
+
+            if (!parseVector3(position_str, pos, line_number, "obstacle position")) {
+                valid = false;
+                error_count++;
+            }
+
+            if (!parseVector3(scale_str, scale, line_number, "obstacle scale")) {
+                valid = false;
+                error_count++;
+            }
+
+            // Parse movement type and parameters
+            std::stringstream move_ss(movement_str);
+            std::string move_type;
+            move_ss >> move_type;
+
+            if (move_type == "linear") {
+                obs.movement_type = "linear";
+                float sx, sy, sz, ex, ey, ez;
+                move_ss >> sx >> sy >> sz >> ex >> ey >> ez;
+                if (move_ss.fail()) {
+                    std::cerr << "Error: Line " << line_number << " (obstacle): Linear requires 'linear sx sy sz ex ey ez'" << std::endl;
+                    valid = false;
+                    error_count++;
+                } else {
+                    obs.movement_start = Vector3(sx, sy, sz);
+                    obs.movement_end = Vector3(ex, ey, ez);
+                }
+            }
+            else if (move_type == "circular") {
+                obs.movement_type = "circular";
+                float cx, cy, cz, radius;
+                move_ss >> cx >> cy >> cz >> radius;
+                if (move_ss.fail()) {
+                    std::cerr << "Error: Line " << line_number << " (obstacle): Circular requires 'circular cx cy cz radius'" << std::endl;
+                    valid = false;
+                    error_count++;
+                } else {
+                    obs.orbit_center = Vector3(cx, cy, cz);
+                    obs.orbit_radius = radius;
+                }
+            }
+            else {
+                std::cerr << "Error: Line " << line_number << " (obstacle): Unknown movement type '" << move_type << "'. Use 'linear' or 'circular'" << std::endl;
+                valid = false;
+                error_count++;
+            }
+
+            // Parse speed
+            float speed;
+            if (!parseFloat(speed_str, speed, line_number, "obstacle speed")) {
+                valid = false;
+                error_count++;
+            } else {
+                obs.movement_speed = speed;
+            }
+
+            if (valid) {
+                obs.position = pos;
+                obs.scale = scale;
+                // Default red translucent color from struct
+                config.obstacles.push_back(obs);
+            }
+        }
         else {
             std::cerr << "Warning: Unknown key '" << key << "' on line " << line_number << std::endl;
             warning_count++;
@@ -339,6 +532,7 @@ LevelConfig LevelConfig::loadFromJSON(const std::string& filepath) {
     std::cout << "  Platforms: " << config.platforms.size() << std::endl;
     std::cout << "  Orbs: " << config.orbs.size() << std::endl;
     std::cout << "  Reset Slabs: " << config.reset_slabs.size() << std::endl;
+    std::cout << "  Obstacles: " << config.obstacles.size() << std::endl;
 
     if (warning_count > 0) {
         std::cout << "  Warnings: " << warning_count << std::endl;
