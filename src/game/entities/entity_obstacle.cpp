@@ -24,7 +24,6 @@ EntityObstacle::EntityObstacle() : EntityCollider()
 
 EntityObstacle::~EntityObstacle()
 {
-    // Mesh and shader are shared resources, don't delete
 }
 
 void EntityObstacle::render(Camera* camera)

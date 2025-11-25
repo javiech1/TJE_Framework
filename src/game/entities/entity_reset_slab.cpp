@@ -4,7 +4,6 @@
 #include "graphics/shader.h"
 #include "game/game.h"
 #include <cmath>
-#include <iostream>
 
 EntityResetSlab::EntityResetSlab() : EntityCollider()
 {

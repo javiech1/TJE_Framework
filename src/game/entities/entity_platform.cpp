@@ -5,7 +5,6 @@
 #include "graphics/shader.h"
 #include "framework/camera.h"
 #include "framework/collision.h"
-#include <iostream>
 #include <cmath>
 
 EntityPlatform::EntityPlatform() : EntityCollider()
@@ -161,9 +160,6 @@ Vector3 EntityPlatform::getCurrentPosition() const
     return model.getTranslation();
 }
 
-// ============================================================================
-// Twin Platform System
-// ============================================================================
 void EntityPlatform::setTwinGroup(int group_id, bool starts_active)
 {
     twin_group_id = group_id;

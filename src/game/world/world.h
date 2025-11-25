@@ -30,18 +30,15 @@ class World
         float getPlayerScale() const;
         EntityPlayer* getPlayer() const { return player; }
 
-        // Level management
         void loadLevel(const LevelConfig& config);
         void clearLevel();
-        void initEmpty();    //empty level for placeholders
-        void reset();       // Reset to last checkpoint
-        void fullReset();   // Full level restart (all orbs, start position)
+        void initEmpty();
+        void reset();
+        void fullReset();
 
-        // Gravity system
         float getGravity() const { return gravity_value; }
         void setGravity(float g) { gravity_value = g; }
 
-        // Skybox access
         EntitySkybox* getSkybox() const { return skybox; }
         void setSkybox(EntitySkybox* sb) { skybox = sb; }
 
@@ -50,19 +47,16 @@ class World
         std::vector<EntityOrb*> orbs;
         std::vector<EntityResetSlab*> reset_slabs;
         std::vector<EntityObstacle*> obstacles;
-        std::vector<EntityPlatform*> twin_platforms;  // Track all twin platforms for toggle
+        std::vector<EntityPlatform*> twin_platforms;
         EntityPlayer* player = nullptr;
         EntitySkybox* skybox = nullptr;
 
-        float gravity_value = 9.8f;  // Default Earth gravity
+        float gravity_value = 9.8f;
         int orbs_collected = 0;
 
-        LevelConfig current_config;  // Store current level configuration
+        LevelConfig current_config;
+        Vector3 player_start;
+        Vector3 last_checkpoint;
 
-        // Checkpoint system
-        Vector3 player_start;     // Original start position
-        Vector3 last_checkpoint;  // Last collected orb position (respawn point)
-
-        // Twin platform toggle callback
         void toggleTwinPlatforms();
 };

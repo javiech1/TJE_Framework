@@ -8,7 +8,6 @@
 #include "graphics/texture.h"
 #include "framework/audio.h"
 #include <cmath>
-#include <iostream>
 #include <vector>
 
 MenuStage::MenuStage()
@@ -34,16 +33,6 @@ MenuStage::MenuStage()
     };
     skybox->texture->loadCubemap("menu_skybox", faces);
 
-    if (skybox->texture->texture_id == 0) {
-        std::cout << "ERROR: Menu skybox texture failed to load!" << std::endl;
-    } else {
-        std::cout << "Menu skybox loaded successfully. ID: " << skybox->texture->texture_id << std::endl;
-    }
-
-    // Play menu music if audio system is available
-    // The Audio system handles its own initialization check internally
-    // Could play menu music here
-    // Audio::Play("data/audio/menu_music.mp3", 0.3f, BASS_SAMPLE_LOOP);
 
     // Unlock mouse for menu navigation
     if (Game::instance) {
@@ -147,7 +136,6 @@ void MenuStage::onKeyDown(SDL_KeyboardEvent event)
             if (selected_option < 0) {
                 selected_option = MENU_COUNT - 1;
             }
-            // Could play menu sound effect here
             break;
 
         case SDLK_DOWN:
@@ -156,20 +144,16 @@ void MenuStage::onKeyDown(SDL_KeyboardEvent event)
             if (selected_option >= MENU_COUNT) {
                 selected_option = 0;
             }
-            // Could play menu sound effect here
             break;
 
         case SDLK_RETURN:
         case SDLK_SPACE:
             switch(selected_option) {
                 case MENU_START_GAME:
-                    std::cout << "Starting game..." << std::endl;
-                    // Transition to play stage
                     Game::instance->setStage(new PlayStage());
                     break;
 
                 case MENU_QUIT:
-                    std::cout << "Quitting game..." << std::endl;
                     Game::instance->must_exit = true;
                     break;
             }
@@ -186,10 +170,8 @@ void MenuStage::onKeyDown(SDL_KeyboardEvent event)
 
 void MenuStage::onKeyUp(SDL_KeyboardEvent event)
 {
-    // No key up handling needed for menu
 }
 
 void MenuStage::onMouseMove(SDL_MouseMotionEvent event)
 {
-    // Could add mouse hover detection for menu options here
 }

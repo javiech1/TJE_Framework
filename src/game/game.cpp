@@ -1,11 +1,7 @@
 #include "game.h"
 #include "framework/utils.h"
-#include "graphics/mesh.h"
-#include "graphics/texture.h"
-#include "graphics/fbo.h"
 #include "graphics/shader.h"
 #include "framework/input.h"
-#include "framework/entities/entity_skybox.h"
 #include "game/stages/play_stage.h"
 #include "game/stages/menu_stage.h"
 #include "framework/audio.h"
@@ -13,12 +9,6 @@
 #include <cmath>
 #include <algorithm>
 
-//some globals
-Mesh* mesh = NULL;
-Texture* texture = NULL;
-Shader* shader = NULL;
-
-float angle = 0;
 float mouse_speed = 100.0f;
 
 Game* Game::instance = NULL;
@@ -35,92 +25,51 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	frame = 0;
 	time = 0.0f;
 	elapsed_time = 0.0f;
-	mouse_locked = true;  // Enable mouse-look by default
+	mouse_locked = true;
 
-	camera_state.distance = 12.0f;  // Pulled back for wider view and better visibility
+	camera_state.distance = 12.0f;
 	camera_state.yaw = float(M_PI);
-	camera_state.pitch = -0.4f;  // More top-down for clearer platform view
-	camera_state.height_offset = 2.0f;  // Lower to keep player centered in frame
-	camera_state.eye = Vector3(0.0f, 10.0f, -20.0f);  // Far back and up
-	camera_state.focus = Vector3(0.0f, 5.0f, 0.0f);  // Looking at player area
+	camera_state.pitch = -0.4f;
+	camera_state.height_offset = 2.0f;
+	camera_state.eye = Vector3(0.0f, 10.0f, -20.0f);
+	camera_state.focus = Vector3(0.0f, 5.0f, 0.0f);
 
-	// OpenGL flags
-	glDisable( GL_CULL_FACE ); //TEMPORALMENTE DESACTIVADO PARA DEBUG
-	glEnable( GL_DEPTH_TEST ); //check the occlusions using the Z buffer
+	glDisable( GL_CULL_FACE );
+	glEnable( GL_DEPTH_TEST );
 
-	// Initialize audio system
-	if (!Audio::Init()) {
-		std::cout << "Warning: Audio system failed to initialize. Game will run without sound." << std::endl;
-	} else {
-		std::cout << "Audio system initialized successfully!" << std::endl;
-
-		// Start global background music - plays continuously throughout entire game
+	if (Audio::Init()) {
 		global_music_channel = Audio::Play("data/audio/stellar_drift.mp3", 0.4f, BASS_SAMPLE_LOOP);
-		if (global_music_channel) {
-			std::cout << "Background music started (looping)" << std::endl;
-		}
 	}
 
-	// Create our camera
 	camera = new Camera();
-	camera->lookAt(Vector3(0.f,10.f, -15.f),Vector3(0.f,5.f,0.f), Vector3(0.f,1.f,0.f)); //position camera behind player
-	camera->setPerspective(70.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
+	camera->lookAt(Vector3(0.f,10.f, -15.f),Vector3(0.f,5.f,0.f), Vector3(0.f,1.f,0.f));
+	camera->setPerspective(70.f,window_width/(float)window_height,0.1f,10000.f);
 
-	texture = nullptr;  // Skip loading corrupted texture
-
-	// Example of loading Mesh from Mesh Manager
-	mesh = Mesh::Get("data/meshes/box.ASE");
-
-	// Example of shader loading using the shaders manager
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-
-	// Skybox is now managed by World class, not here
-
-	//set init stage - Start with menu
 	setStage(new MenuStage());
-
-	// Mouse will be unlocked by MenuStage for menu navigation
-	// setMouseLocked(true);  // Will be set when entering gameplay
 }
 
-//what to do when the image has to be draw
 void Game::render(void)
-{	
-	// Set the clear color (the background color)
+{
 	glClearColor(0.0, 0.0, 0.0, 1.0);
-	
-	// Clear the window and the depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	// Set the camera as default
 	camera->enable();
 
-	// Skybox is now rendered by the stage/world
-
-	//set the current stage
 	if(current_stage){
 		current_stage->render(camera);
 	}
 
-	// Debug grid removed - was showing on menu
-	// Render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
-
-	// Swap between front buffer and back buffer
 	SDL_GL_SwapWindow(this->window);
 }
 
 void Game::update(double seconds_elapsed)
 {
-
 	if(current_stage){
 		current_stage->update(seconds_elapsed);
 	}
 
-	// TEMPORARY: Camera controls for debugging
 	const float mouse_sensitivity = 0.004f;
-	if (mouse_locked)  // Mouse-look when locked (no click required)
-	{
+	if (mouse_locked) {
 		camera_state.yaw   -= Input::mouse_delta.x * mouse_sensitivity;
 		camera_state.pitch -= Input::mouse_delta.y * mouse_sensitivity;
 	}
@@ -152,20 +101,15 @@ void Game::update(double seconds_elapsed)
 	camera_state.distance = std::max(camera_state.distance, player_scale * 2.0f);
 
 	updateThirdPersonCamera(player, float(seconds_elapsed));
-
 }
 
-//Keyboard event handler (sync input)
 void Game::onKeyDown( SDL_KeyboardEvent event )
 {
 	switch(event.keysym.sym)
 	{
-		// ESC key is now handled by stages (menu/game) for proper flow
-		// case SDLK_ESCAPE: must_exit = true; break;
 		case SDLK_F1: Shader::ReloadAll(); break;
 	}
 
-	//delegate to stage
 	if(current_stage){
 		current_stage->onKeyDown(event);
 	}
@@ -173,7 +117,6 @@ void Game::onKeyDown( SDL_KeyboardEvent event )
 
 void Game::onKeyUp(SDL_KeyboardEvent event)
 {
-	//delegate to stage
 	if(current_stage){
 		current_stage->onKeyUp(event);
 	}
@@ -181,8 +124,7 @@ void Game::onKeyUp(SDL_KeyboardEvent event)
 
 void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 {
-	if (event.button == SDL_BUTTON_MIDDLE) //middle mouse
-	{
+	if (event.button == SDL_BUTTON_MIDDLE) {
 		mouse_locked = !mouse_locked;
 		SDL_ShowCursor(!mouse_locked);
 		SDL_SetRelativeMouseMode((SDL_bool)(mouse_locked));
@@ -191,7 +133,6 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 
 void Game::onMouseButtonUp(SDL_MouseButtonEvent event)
 {
-
 }
 
 void Game::onMouseWheel(SDL_MouseWheelEvent event)
@@ -201,17 +142,14 @@ void Game::onMouseWheel(SDL_MouseWheelEvent event)
 
 void Game::onGamepadButtonDown(SDL_JoyButtonEvent event)
 {
-
 }
 
 void Game::onGamepadButtonUp(SDL_JoyButtonEvent event)
 {
-
 }
 
 void Game::onResize(int width, int height)
 {
-    std::cout << "window resized: " << width << "," << height << std::endl;
 	glViewport( 0,0, width, height );
 	camera->aspect =  width / (float)height;
 	window_width = width;
@@ -229,7 +167,6 @@ void Game::setMouseLocked(bool must_lock)
 
 void Game::onMouseMove(SDL_MouseMotionEvent event)
 {
-	//delegate to stage
 	if(current_stage){
 		current_stage->onMouseMove(event);
 	}
@@ -244,7 +181,6 @@ void Game::setStage(Stage* new_stage)
 
 void Game::updateThirdPersonCamera(EntityPlayer* player, float dt)
 {
-
 	if(!player) return;
 
 	Vector3 player_pos = player ? player->getPosition() : Vector3();
