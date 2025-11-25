@@ -515,6 +515,71 @@ LevelConfig LevelConfig::loadFromJSON(const std::string& filepath) {
                 config.obstacles.push_back(obs);
             }
         }
+        else if (key == "twin_platform") {
+            // Format: position | scale | color | group_id starts_active
+            int pipe_count = countPipes(value);
+            if (pipe_count != 3) {
+                std::cerr << "Error: Line " << line_number << " (twin_platform): Expected 3 pipes '|', found "
+                          << pipe_count << ". Format: x y z | sx sy sz | r g b a | group_id starts_active" << std::endl;
+                error_count++;
+                continue;
+            }
+
+            TwinPlatformDef twin;
+
+            // Split by | delimiter
+            std::stringstream ss(value);
+            std::string position_str, scale_str, color_str, group_str;
+
+            std::getline(ss, position_str, '|');
+            std::getline(ss, scale_str, '|');
+            std::getline(ss, color_str, '|');
+            std::getline(ss, group_str, '|');
+
+            position_str = trim(position_str);
+            scale_str = trim(scale_str);
+            color_str = trim(color_str);
+            group_str = trim(group_str);
+
+            bool valid = true;
+            Vector3 pos, scale;
+            Vector4 color;
+
+            if (!parseVector3(position_str, pos, line_number, "twin_platform position")) {
+                valid = false;
+                error_count++;
+            }
+
+            if (!parseVector3(scale_str, scale, line_number, "twin_platform scale")) {
+                valid = false;
+                error_count++;
+            }
+
+            if (!parseVector4(color_str, color, line_number, "twin_platform color")) {
+                valid = false;
+                error_count++;
+            }
+
+            // Parse group_id and starts_active
+            std::stringstream group_ss(group_str);
+            int group_id;
+            int starts_active_int;
+            group_ss >> group_id >> starts_active_int;
+            if (group_ss.fail()) {
+                std::cerr << "Error: Line " << line_number << " (twin_platform): Group section requires 'group_id starts_active'" << std::endl;
+                valid = false;
+                error_count++;
+            }
+
+            if (valid) {
+                twin.position = pos;
+                twin.scale = scale;
+                twin.color = color;
+                twin.group_id = group_id;
+                twin.starts_active = (starts_active_int != 0);
+                config.twin_platforms.push_back(twin);
+            }
+        }
         else {
             std::cerr << "Warning: Unknown key '" << key << "' on line " << line_number << std::endl;
             warning_count++;
@@ -530,6 +595,7 @@ LevelConfig LevelConfig::loadFromJSON(const std::string& filepath) {
     std::cout << "========================================" << std::endl;
     std::cout << "Loaded level '" << config.name << "' from " << filepath << std::endl;
     std::cout << "  Platforms: " << config.platforms.size() << std::endl;
+    std::cout << "  Twin Platforms: " << config.twin_platforms.size() << std::endl;
     std::cout << "  Orbs: " << config.orbs.size() << std::endl;
     std::cout << "  Reset Slabs: " << config.reset_slabs.size() << std::endl;
     std::cout << "  Obstacles: " << config.obstacles.size() << std::endl;

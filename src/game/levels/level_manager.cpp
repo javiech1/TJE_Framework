@@ -48,24 +48,10 @@ LevelConfig LevelManager::createTutorialLevel() {
     return LevelConfig::loadFromJSON("data/levels/tutorial.txt");
 }
 
-// Level 2: Empty level with low gravity (moon-like)
+// Level 2: Phase Shift - Wall Jump + Twin Platforms
 LevelConfig LevelManager::createLevel2() {
-    LevelConfig config;
-
-    config.name = "Low Gravity Zone";
-    config.type = LevelConfig::EMPTY;  // Empty level for future design
-    config.gravity = 4.9f;  // Half of Earth gravity (moon-like)
-
-    // Could specify custom skybox here if desired
-    // For now, use default skybox
-
-    config.player_start_position = Vector3(0.0f, 2.0f, 0.0f);  // Start above platform
-    config.background_music = "data/audio/stellar_drift.mp3";
-    config.music_volume = 0.3f;
-
-    // Empty level - add platforms/orbs via data file or code when designing this level
-
-    return config;
+    // Load phase shift level from custom text format
+    return LevelConfig::loadFromJSON("data/levels/phase_shift.txt");
 }
 
 // Level 3: Empty level with high gravity

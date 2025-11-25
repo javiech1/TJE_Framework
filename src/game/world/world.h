@@ -9,6 +9,7 @@
 class Entity;
 class EntityPlayer;
 class EntitySkybox;
+class EntityPlatform;
 class Camera;
 class EntityOrb;
 class EntityResetSlab;
@@ -50,6 +51,7 @@ class World
         std::vector<EntityOrb*> orbs;
         std::vector<EntityResetSlab*> reset_slabs;
         std::vector<EntityObstacle*> obstacles;
+        std::vector<EntityPlatform*> twin_platforms;  // Track all twin platforms for toggle
         EntityPlayer* player = nullptr;
         EntitySkybox* skybox = nullptr;
 
@@ -62,4 +64,7 @@ class World
         // Checkpoint system
         Vector3 player_start;     // Original start position
         Vector3 last_checkpoint;  // Last collected orb position (respawn point)
+
+        // Twin platform toggle callback
+        void toggleTwinPlatforms();
 };

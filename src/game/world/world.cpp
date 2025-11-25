@@ -25,6 +25,12 @@ World::World()
     // Player scale is defined in EntityPlayer constructor (0.1f)
     // Player position is set by loadLevel() from level config
     player->setWorld(this);  // Connect player to world for gravity
+
+    // Set up twin platform toggle callback (triggers on any jump)
+    player->setOnJumpCallback([this]() {
+        this->toggleTwinPlatforms();
+    });
+
     this->player = player;
     entities.push_back(player);
 
@@ -268,6 +274,9 @@ void World::clearLevel()
     }
     obstacles.clear();
 
+    // Twin platforms are in entities vector, just clear tracking list
+    twin_platforms.clear();
+
     orbs_collected = 0;
 }
 
@@ -356,8 +365,31 @@ void World::loadLevel(const LevelConfig& config)
             obstacles.push_back(obstacle);
         }
 
+        // Load twin platforms from config
+        for (const auto& twin_def : config.twin_platforms) {
+            EntityPlatform* platform = new EntityPlatform();
+            platform->mesh = Mesh::Get("data/meshes/box.ASE");
+
+            // Ensure collision model is created for the mesh
+            if (platform->mesh && !platform->mesh->collision_model) {
+                platform->mesh->createCollisionModel();
+            }
+
+            platform->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/platform.fs");
+            platform->setPosition(twin_def.position);
+            platform->setScale(twin_def.scale);
+            platform->color = twin_def.color;
+
+            // Configure twin behavior
+            platform->setTwinGroup(twin_def.group_id, twin_def.starts_active);
+
+            entities.push_back(platform);
+            twin_platforms.push_back(platform);  // Track for toggle callback
+        }
+
         std::cout << "Loaded level from data file" << std::endl;
         std::cout << "  Platforms: " << config.platforms.size() << std::endl;
+        std::cout << "  Twin Platforms: " << config.twin_platforms.size() << std::endl;
         std::cout << "  Orbs: " << config.orbs.size() << std::endl;
         std::cout << "  Reset Slabs: " << config.reset_slabs.size() << std::endl;
         std::cout << "  Obstacles: " << config.obstacles.size() << std::endl;
@@ -367,14 +399,11 @@ void World::loadLevel(const LevelConfig& config)
     player_start = config.player_start_position;
     last_checkpoint = config.player_start_position;
 
-    // Place player at configured position, let physics handle landing
+    // Place player at configured position - let gravity handle landing
     if (player) {
         player->setPosition(config.player_start_position);
         player->resetVelocity();
-        std::cout << "Player spawned at: "
-                  << config.player_start_position.x << " "
-                  << config.player_start_position.y << " "
-                  << config.player_start_position.z << std::endl;
+        // Physics loop (detectGround + resolveCollisions) handles falling onto platform
     }
 
     // Play background music if specified
@@ -383,6 +412,9 @@ void World::loadLevel(const LevelConfig& config)
     }
 
     std::cout << "Level '" << config.name << "' loaded. Gravity: " << gravity_value << std::endl;
+
+    // Trigger reset to ensure player properly lands on platform
+    reset();
 }
 
 void World::reset()
@@ -391,9 +423,9 @@ void World::reset()
     if (player) {
         player->setPosition(last_checkpoint);
         player->resetVelocity();
+        // Let gravity handle landing at checkpoint
     }
     // Don't reset collected orbs - they stay collected
-    std::cout << "Respawn at checkpoint!" << std::endl;
 }
 
 void World::fullReset()
@@ -401,4 +433,14 @@ void World::fullReset()
     // Full level restart - reload everything
     loadLevel(current_config);
     std::cout << "Full level reset!" << std::endl;
+}
+
+void World::toggleTwinPlatforms()
+{
+    if (twin_platforms.empty()) return;
+
+    for (EntityPlatform* platform : twin_platforms) {
+        platform->toggleTwinState();
+    }
+    std::cout << "Twin platforms toggled!" << std::endl;
 }

@@ -27,11 +27,21 @@ void EntityPlatform::render(Camera* camera)
 {
     if(!mesh || !shader || !visible) return;
 
+    // Determine render color based on twin state
+    Vector4 render_color = color;
+    if (isTwin() && !twin_is_active) {
+        // Ghost rendering: semi-transparent version
+        render_color.w = 0.25f;  // 25% opacity for ghost platforms
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);  // Don't write to depth buffer
+    }
+
     // Custom render implementation with our color
     shader->enable();
     shader->setUniform("u_model", model);
     shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
-    shader->setUniform("u_color", color);  // Use our custom color
+    shader->setUniform("u_color", render_color);
     shader->setUniform("u_time", Game::instance->time);
     shader->setUniform("u_camera_pos", camera->eye);  // Pass camera position for lighting
 
@@ -41,6 +51,12 @@ void EntityPlatform::render(Camera* camera)
 
     mesh->render(GL_TRIANGLES);
     shader->disable();
+
+    // Restore GL state for ghost platforms
+    if (isTwin() && !twin_is_active) {
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+    }
 }
 
 void EntityPlatform::update(float delta_time)
@@ -143,5 +159,20 @@ void EntityPlatform::setCircularMovement(const Vector3& center, float radius, fl
 Vector3 EntityPlatform::getCurrentPosition() const
 {
     return model.getTranslation();
+}
+
+// ============================================================================
+// Twin Platform System
+// ============================================================================
+void EntityPlatform::setTwinGroup(int group_id, bool starts_active)
+{
+    twin_group_id = group_id;
+    twin_is_active = starts_active;
+}
+
+void EntityPlatform::toggleTwinState()
+{
+    if (twin_group_id < 0) return;  // Not a twin platform
+    twin_is_active = !twin_is_active;
 }
 

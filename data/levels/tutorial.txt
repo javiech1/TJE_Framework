@@ -4,7 +4,7 @@
 
 name: Tutorial
 gravity: 9.8
-player_start: 0.0 2.0 0.0
+player_start: 0.0 1.5 0.0
 music: data/audio/stellar_drift.mp3
 music_volume: 0.5
 

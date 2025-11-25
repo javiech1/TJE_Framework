@@ -128,14 +128,19 @@ void EntityPlayer::handleInput(float delta_time)
     if (move_dir.length() > 0)
     {
         move_dir.normalize();
-        velocity.x = move_dir.x * speed;
-        velocity.z = move_dir.z * speed;
+
+        // Don't override horizontal velocity during wall jump momentum lock
+        if (wall_jump_momentum_timer <= 0.0f) {
+            velocity.x = move_dir.x * speed;
+            velocity.z = move_dir.z * speed;
+        }
 
         // Calculate target rotation based on movement direction
         target_yaw = atan2(move_dir.x, move_dir.z);
     }
-    else
+    else if (wall_jump_momentum_timer <= 0.0f)
     {
+        // Only stop if not in wall jump momentum
         velocity.x = 0;
         velocity.z = 0;
     }
@@ -143,13 +148,35 @@ void EntityPlayer::handleInput(float delta_time)
 
 void EntityPlayer::applyPhysics(float delta_time)
 {
-    // Process jump
+    // Update wall jump cooldown
+    if (wall_jump_cooldown > 0.0f) {
+        wall_jump_cooldown -= delta_time;
+    }
+
+    // Update wall jump momentum timer
+    if (wall_jump_momentum_timer > 0.0f) {
+        wall_jump_momentum_timer -= delta_time;
+    }
+
+    // Process jump (ground jump OR wall jump)
     if (jump_requested) {
         if (is_grounded) {
+            // Normal ground jump
             velocity.y = jump_velocity;
             is_grounded = false;
-            ground_platform = nullptr;  // Clear platform reference on jump
+            ground_platform = nullptr;
+            notifyJump();  // Notify for twin platforms
             std::cout << "JUMP! velocity.y = " << velocity.y << std::endl;
+        }
+        else if (is_touching_wall && wall_jump_cooldown <= 0.0f) {
+            // Wall jump - push away from wall + up
+            velocity.y = jump_velocity * 0.9f;  // Slightly less vertical than ground jump
+            velocity.x = wall_normal.x * WALL_JUMP_HORIZONTAL;
+            velocity.z = wall_normal.z * WALL_JUMP_HORIZONTAL;
+            wall_jump_cooldown = WALL_JUMP_COOLDOWN;
+            wall_jump_momentum_timer = WALL_JUMP_MOMENTUM_LOCK;  // Lock input briefly
+            notifyJump();  // Notify for twin platforms
+            std::cout << "WALL JUMP! normal=(" << wall_normal.x << "," << wall_normal.z << ")" << std::endl;
         }
         jump_requested = false;
     }
@@ -239,6 +266,8 @@ void EntityPlayer::detectGround(const std::vector<Entity*>& entities)
                 // Try to find which platform we're standing on
                 for (Entity* entity : entities) {
                     EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
+                    // Skip inactive twin platforms
+                    if (platform && platform->isTwin() && !platform->isTwinActive()) continue;
                     if (platform && platform->isMoving()) {
                         // Check if this platform is under us
                         Vector3 plat_pos = platform->getCurrentPosition();
@@ -269,6 +298,9 @@ void EntityPlayer::detectGround(const std::vector<Entity*>& entities)
 void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
 {
     float collision_radius = player_scale * COLLISION_RADIUS_MULT;
+
+    // Reset wall contact each frame (will be set if collision detected)
+    is_touching_wall = false;
 
     // --- GROUND SNAP (vertical correction) ---
     Vector3 ray_dir(0, -1, 0);
@@ -323,6 +355,9 @@ void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
             EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
             if (!platform) continue;
 
+            // Skip inactive twin platforms (ghost platforms have no collision)
+            if (platform->isTwin() && !platform->isTwinActive()) continue;
+
             // Get platform bounds
             Vector3 box_center = platform->model.getTranslation();
             Vector3 box_half_size = platform->getHalfSize();
@@ -352,18 +387,29 @@ void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
 
                 // Handle edge case: player center inside box
                 if (push_direction.length() < 0.001f) {
-                    // Push toward nearest face
-                    Vector3 to_center = position - box_center;
-                    float abs_x = fabs(to_center.x);
-                    float abs_y = fabs(to_center.y);
-                    float abs_z = fabs(to_center.z);
+                    // Push toward NEAREST FACE (not center!)
+                    // Calculate distance to each face
+                    float dist_to_x_min = fabs(position.x - (box_center.x - box_half_size.x));
+                    float dist_to_x_max = fabs(position.x - (box_center.x + box_half_size.x));
+                    float dist_to_y_min = fabs(position.y - (box_center.y - box_half_size.y));
+                    float dist_to_y_max = fabs(position.y - (box_center.y + box_half_size.y));
+                    float dist_to_z_min = fabs(position.z - (box_center.z - box_half_size.z));
+                    float dist_to_z_max = fabs(position.z - (box_center.z + box_half_size.z));
 
-                    if (abs_x > abs_y && abs_x > abs_z) {
-                        push_direction = Vector3(to_center.x > 0 ? 1 : -1, 0, 0);
-                    } else if (abs_y > abs_z) {
-                        push_direction = Vector3(0, to_center.y > 0 ? 1 : -1, 0);
+                    float min_x = std::min(dist_to_x_min, dist_to_x_max);
+                    float min_y = std::min(dist_to_y_min, dist_to_y_max);
+                    float min_z = std::min(dist_to_z_min, dist_to_z_max);
+
+                    // Push toward the closest face
+                    if (min_x <= min_y && min_x <= min_z) {
+                        // X face is closest - push horizontally
+                        push_direction = Vector3(position.x > box_center.x ? 1 : -1, 0, 0);
+                    } else if (min_y <= min_z) {
+                        // Y face is closest - push vertically
+                        push_direction = Vector3(0, position.y > box_center.y ? 1 : -1, 0);
                     } else {
-                        push_direction = Vector3(0, 0, to_center.z > 0 ? 1 : -1);
+                        // Z face is closest - push in depth
+                        push_direction = Vector3(0, 0, position.z > box_center.z ? 1 : -1);
                     }
                     penetration = collision_radius;  // Full radius penetration
                 } else {
@@ -388,6 +434,10 @@ void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
                     // Wall collision (horizontal)
                     position += push_direction * (penetration + 0.001f);
 
+                    // Track wall contact for wall jumping
+                    is_touching_wall = true;
+                    wall_normal = push_direction;  // Points away from wall
+
                     // Slide along wall - ONLY horizontal components
                     // This prevents the jump velocity from being amplified
                     Vector3 horizontal_push = Vector3(push_direction.x, 0, push_direction.z);
@@ -411,4 +461,36 @@ void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
 
     // Sync model matrix with corrected position
     updateModelMatrix();
+}
+
+// ============================================================================
+// settleToGround() - One-time spawn settling
+// Called after loadLevel() or reset() to snap player to ground from spawn height
+// Uses longer ray than normal gameplay to handle elevated spawn positions
+// ============================================================================
+void EntityPlayer::settleToGround(const std::vector<Entity*>& entities)
+{
+    float collision_radius = player_scale * COLLISION_RADIUS_MULT;
+
+    // Spawn settling ray - long enough to detect ground from spawn heights up to ~2 units
+    // Normal gameplay uses collision_radius * 1.5 = 0.3 units
+    // Spawn settling uses 2.0 units to handle elevated spawns
+    const float SPAWN_RAY_DISTANCE = 2.0f;
+
+    Vector3 ray_dir(0, -1, 0);  // Straight down
+    sCollisionData ground_hit;
+    ground_hit.distance = std::numeric_limits<float>::max();
+
+    if (Collision::TestSceneRay(entities, position, ray_dir, ground_hit,
+                                 eCollisionFilter::FLOOR, true, SPAWN_RAY_DISTANCE)) {
+        if (ground_hit.collided) {
+            // Snap to ground surface + collision radius
+            float ground_y = ground_hit.col_point.y + collision_radius;
+            position.y = ground_y;
+            velocity.y = 0;
+            is_grounded = true;
+            updateModelMatrix();
+            std::cout << "Spawn settled to ground at Y=" << ground_y << std::endl;
+        }
+    }
 }

@@ -95,7 +95,7 @@ void MenuStage::renderMenuUI(Camera* camera)
     // Title
     float titleScale = 4.0f;
     Vector3 titleColor(1.0f, 1.0f, 1.0f);
-    std::string title = "PLATFORM JUMPER";
+    std::string title = "Return Home";
     int titleX = window_width / 2 - (title.length() * 8 * titleScale) / 2;  // Center text
     int titleY = window_height / 4;
     drawText(titleX, titleY, title, titleColor, titleScale);
@@ -103,7 +103,6 @@ void MenuStage::renderMenuUI(Camera* camera)
     // Menu options
     std::vector<std::string> options = {
         "START GAME",
-        "OPTIONS",
         "QUIT"
     };
 
@@ -167,11 +166,6 @@ void MenuStage::onKeyDown(SDL_KeyboardEvent event)
                     std::cout << "Starting game..." << std::endl;
                     // Transition to play stage
                     Game::instance->setStage(new PlayStage());
-                    break;
-
-                case MENU_OPTIONS:
-                    std::cout << "Options not implemented yet" << std::endl;
-                    // TODO: Could create an OptionsStage
                     break;
 
                 case MENU_QUIT:

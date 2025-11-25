@@ -26,6 +26,10 @@ class EntityPlatform : public EntityCollider {
         Vector3 last_position;       // For velocity calculation
         Vector3 current_velocity;    // Platform velocity this frame
 
+        // Twin platform system
+        int twin_group_id = -1;      // Group ID (-1 = not a twin platform)
+        bool twin_is_active = true;  // Whether this platform is solid/fully visible
+
     public:
         Texture* texture = nullptr;
         Shader* shader = nullptr;
@@ -46,5 +50,12 @@ class EntityPlatform : public EntityCollider {
         Vector3 getCurrentPosition() const;
         Vector3 getVelocity() const { return current_velocity; }
         bool isMoving() const { return movement_type != MovementType::NONE; }
+
+        // Twin platform methods
+        void setTwinGroup(int group_id, bool starts_active);
+        int getTwinGroup() const { return twin_group_id; }
+        bool isTwin() const { return twin_group_id >= 0; }
+        bool isTwinActive() const { return twin_is_active; }
+        void toggleTwinState();
 };
   

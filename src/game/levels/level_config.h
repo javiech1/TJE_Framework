@@ -80,6 +80,15 @@ struct LevelConfig {
     };
     std::vector<ObstacleDef> obstacles;
 
+    struct TwinPlatformDef {
+        Vector3 position;
+        Vector3 scale;
+        Vector4 color;
+        int group_id;           // Platforms with same group_id toggle together
+        bool starts_active;     // Whether this platform starts solid (true) or ghost (false)
+    };
+    std::vector<TwinPlatformDef> twin_platforms;
+
     // Static method to load configuration from JSON file
     static LevelConfig loadFromJSON(const std::string& filepath);
 };
