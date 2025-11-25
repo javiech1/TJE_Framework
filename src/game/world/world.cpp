@@ -10,8 +10,8 @@
 #include "game/entities/entity_reset_slab.h"
 #include "game/entities/entity_obstacle.h"
 #include "framework/utils.h"
-#include "framework/audio.h"
 #include "framework/collision.h"
+#include "framework/audio.h"
 #include <iostream>
 #include <limits>
 
@@ -61,11 +61,7 @@ World::World()
 
 World::~World()
 {
-    // Stop background music if playing
-    if (music_channel) {
-        Audio::Stop(music_channel);
-        music_channel = 0;
-    }
+    // Note: Global music is managed by Game class, not World
 
     // Clean up skybox
     if (skybox) {
@@ -198,6 +194,9 @@ void World::update(float delta_time)
                 orb->collect();
                 orbs_collected++;
 
+                // Play collection sound effect
+                Audio::Play("data/audio/721542__tildeyann__ping_sherman01.wav", 0.6f);
+
                 // Update checkpoint to orb position
                 last_checkpoint = orb_pos;
                 last_checkpoint.y += 1.5f;  // Spawn slightly above orb
@@ -242,11 +241,7 @@ void World::initEmpty()
 
 void World::clearLevel()
 {
-    // Stop background music
-    if (music_channel) {
-        Audio::Stop(music_channel);
-        music_channel = 0;
-    }
+    // Note: Global music is managed by Game class, not World
 
     // Clear all entities except player
     for (auto it = entities.begin(); it != entities.end(); ) {
@@ -406,10 +401,7 @@ void World::loadLevel(const LevelConfig& config)
         // Physics loop (detectGround + resolveCollisions) handles falling onto platform
     }
 
-    // Play background music if specified
-    if (!config.background_music.empty()) {
-        music_channel = Audio::Play(config.background_music.c_str(), config.music_volume, true);
-    }
+    // Note: Global music is managed by Game class, not per-level
 
     std::cout << "Level '" << config.name << "' loaded. Gravity: " << gravity_value << std::endl;
 

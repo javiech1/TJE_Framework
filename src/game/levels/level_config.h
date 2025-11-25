@@ -4,25 +4,21 @@
 #include <string>
 #include <vector>
 #include "framework/utils.h"
-#include <fstream>
-#include <sstream>
 
 // Level configuration structure
 // Defines all properties that can vary between levels
 struct LevelConfig {
     // Basic level properties
-    std::string name;                    // Display name for the level
-    float gravity = 9.8f;                // Gravity strength (default Earth-like)
+    std::string name;
+    float gravity = 9.8f;
 
     // Skybox configuration (optional)
-    // If empty, uses default skybox
-    std::vector<std::string> skybox_faces;  // 6 faces: +X, -X, +Y, -Y, +Z, -Z
+    std::vector<std::string> skybox_faces;
 
     // Level initialization type
     enum LevelType {
-        TUTORIAL,    // DEPRECATED - No longer used (removed hardcoded level geometry)
         EMPTY,       // Empty level for future design
-        DATA         // Load from text file (platforms, orbs, reset_slabs)
+        DATA         // Level with platforms, orbs, etc.
     };
     LevelType type = EMPTY;
 
@@ -38,39 +34,39 @@ struct LevelConfig {
         Vector3 position;
         Vector3 scale;
         Vector4 color;
-        std::string texture_path = "";  // Optional, empty for flat color
+        std::string texture_path = "";
 
         // Movement parameters (optional)
         std::string movement_type = "none";  // "none", "linear", "circular"
-        Vector3 movement_start;              // For linear: start position
-        Vector3 movement_end;                // For linear: end position
-        float movement_speed = 1.0f;         // Speed multiplier
-        float movement_phase = 0.0f;         // Starting phase
-        float orbit_radius = 0.0f;           // For circular: orbit radius
-        Vector3 orbit_center;                // For circular: center point
+        Vector3 movement_start;
+        Vector3 movement_end;
+        float movement_speed = 1.0f;
+        float movement_phase = 0.0f;
+        float orbit_radius = 0.0f;
+        Vector3 orbit_center;
     };
     std::vector<PlatformDef> platforms;
 
     struct OrbDef {
         Vector3 position;
-        Vector4 color = Vector4(1.0f, 0.9f, 0.3f, 1.0f);  // Default gold color
+        Vector4 color = Vector4(1.0f, 0.9f, 0.3f, 1.0f);
     };
     std::vector<OrbDef> orbs;
 
     struct ResetSlabDef {
         Vector3 position;
         Vector3 scale;
-        Vector4 color = Vector4(1.0f, 0.2f, 0.2f, 0.4f);  // Default red semi-transparent
+        Vector4 color = Vector4(1.0f, 0.2f, 0.2f, 0.4f);
     };
     std::vector<ResetSlabDef> reset_slabs;
 
     struct ObstacleDef {
         Vector3 position;
         Vector3 scale;
-        Vector4 color = Vector4(1.0f, 0.2f, 0.2f, 0.4f);  // Default red translucent
+        Vector4 color = Vector4(1.0f, 0.2f, 0.2f, 0.4f);
 
-        // Movement parameters (required for obstacles)
-        std::string movement_type = "linear";  // "linear" or "circular"
+        // Movement parameters
+        std::string movement_type = "linear";
         Vector3 movement_start;
         Vector3 movement_end;
         float movement_speed = 1.0f;
@@ -84,13 +80,10 @@ struct LevelConfig {
         Vector3 position;
         Vector3 scale;
         Vector4 color;
-        int group_id;           // Platforms with same group_id toggle together
-        bool starts_active;     // Whether this platform starts solid (true) or ghost (false)
+        int group_id;
+        bool starts_active;
     };
     std::vector<TwinPlatformDef> twin_platforms;
-
-    // Static method to load configuration from JSON file
-    static LevelConfig loadFromJSON(const std::string& filepath);
 };
 
 #endif // LEVEL_CONFIG_H

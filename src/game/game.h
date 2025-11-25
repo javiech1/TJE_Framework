@@ -8,6 +8,7 @@
 #include "framework/camera.h"
 #include "framework/utils.h"
 #include "game/stages/stage.h"
+#include "framework/extra/bass.h"  // For HCHANNEL type
 
 struct ThirdPersonCameraState 
 {
@@ -65,4 +66,7 @@ class Game
 
 	private:
 		void updateThirdPersonCamera(EntityPlayer* player, float dt);
+
+		// Global music channel - plays continuously from menu through all levels
+		HCHANNEL global_music_channel = 0;
 };

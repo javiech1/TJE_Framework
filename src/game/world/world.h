@@ -2,7 +2,6 @@
 
 #include "framework/camera.h"
 #include "framework/input.h"
-#include "framework/extra/bass.h"  // For HCHANNEL type
 #include "../levels/level_config.h"
 #include <vector>
 
@@ -57,7 +56,6 @@ class World
 
         float gravity_value = 9.8f;  // Default Earth gravity
         int orbs_collected = 0;
-        HCHANNEL music_channel = 0;  // Background music channel
 
         LevelConfig current_config;  // Store current level configuration
 

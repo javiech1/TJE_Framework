@@ -53,6 +53,12 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 		std::cout << "Warning: Audio system failed to initialize. Game will run without sound." << std::endl;
 	} else {
 		std::cout << "Audio system initialized successfully!" << std::endl;
+
+		// Start global background music - plays continuously throughout entire game
+		global_music_channel = Audio::Play("data/audio/stellar_drift.mp3", 0.4f, BASS_SAMPLE_LOOP);
+		if (global_music_channel) {
+			std::cout << "Background music started (looping)" << std::endl;
+		}
 	}
 
 	// Create our camera
@@ -60,9 +66,6 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	camera->lookAt(Vector3(0.f,10.f, -15.f),Vector3(0.f,5.f,0.f), Vector3(0.f,1.f,0.f)); //position camera behind player
 	camera->setPerspective(70.f,window_width/(float)window_height,0.1f,10000.f); //set the projection, we want to be perspective
 
-	// Load one texture using the Texture Manager
-	// COMMENTED OUT - texture.tga is corrupted
-	// texture = Texture::Get("data/textures/texture.tga");
 	texture = nullptr;  // Skip loading corrupted texture
 
 	// Example of loading Mesh from Mesh Manager
