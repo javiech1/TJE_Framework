@@ -29,6 +29,6 @@ class EntityOrb : public EntityCollider {
 
         void setPosition(const Vector3& pos);
         Vector3 getPosition() const { return position; }
-        float getRadius() const { return scale_factor * 0.5f; }
+        float getRadius() const { return scale_factor; }  // Match visual render scale
 
 };

@@ -358,10 +358,17 @@ void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
                     // Wall collision (horizontal)
                     position += push_direction * (penetration + 0.001f);
 
-                    // Slide along wall
-                    float v_dot_n = velocity.dot(push_direction);
-                    if (v_dot_n < 0) {
-                        velocity -= push_direction * v_dot_n;
+                    // Slide along wall - ONLY horizontal components
+                    // This prevents the jump velocity from being amplified
+                    Vector3 horizontal_push = Vector3(push_direction.x, 0, push_direction.z);
+                    float h_len = horizontal_push.length();
+                    if (h_len > 0.001f) {
+                        horizontal_push = horizontal_push * (1.0f / h_len);  // normalize
+                        float v_dot_n = velocity.x * horizontal_push.x + velocity.z * horizontal_push.z;
+                        if (v_dot_n < 0) {
+                            velocity.x -= horizontal_push.x * v_dot_n;
+                            velocity.z -= horizontal_push.z * v_dot_n;
+                        }
                     }
 
                     collision_found = true;
