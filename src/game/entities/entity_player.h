@@ -39,9 +39,11 @@ class EntityPlayer : public EntityMesh {
         static constexpr float WALL_JUMP_COOLDOWN = 0.15f;     // 150ms between wall jumps
         static constexpr float WALL_JUMP_HORIZONTAL = 12.0f;   // Strong horizontal push (Celeste-style)
         static constexpr float WALL_JUMP_MOMENTUM_LOCK = 0.30f; // 300ms momentum preservation
+        static constexpr float WALL_CLING_TIME = 0.12f;        // 120ms buffer for wall jump input
 
         // Wall jump momentum timer (locks horizontal input briefly after wall jump)
         float wall_jump_momentum_timer = 0.0f;
+        float wall_cling_timer = 0.0f;                         // Time remaining for wall cling
 
         // Jump callback (for twin platforms)
         std::function<void()> on_jump_callback = nullptr;

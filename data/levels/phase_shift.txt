@@ -1,9 +1,10 @@
-# Level 2: Phase Shift - OPEN AIR DESIGN
+# Level 2: Phase Shift - EXPANDED DESIGN v4
 # Walls FLOAT in open space - no platforms under or over!
-# Wall jump = touch high, go VERY high
+# Wall jump = dramatic height gain + toggle mechanics
 #
 # PHYSICS: Ground=22h/4.13v | Wall=12u/s push + contact_Y+3.72 peak
-# SCALE: Tutorial gaps (10-15 units), fewer platforms, bigger leaps
+# SCALE: Tutorial gaps (10-15 units), wall bouncing, twin walls, moving walls
+# HEIGHT: 0 to 65 units - DRAMATIC ASCENT!
 
 name: Phase Shift
 gravity: 9.8
@@ -73,47 +74,106 @@ platform: 4.0 18.0 -130.0 | 0.08 0.01 0.08 | 0.5 0.7 1.0 1.0
 # Left face at X=11, spans Y=17-27
 platform: 12.0 22.0 -130.0 | 0.02 0.10 0.06 | 0.3 0.5 0.9 1.0
 
-# [10] GHOST LANDING - far left, becomes solid mid-air!
-# Wall jump from X=11, pushed LEFT 23 units to X=-12✓
+# [10] GHOST LANDING - becomes solid mid-air! FIXED: 12 units from wall (reachable!)
+# Wall jump from X=11, pushed LEFT ~12 units to X=0
 # Wall jump triggers Group 1 toggle!
 # Group 1, starts ghost
-twin_platform: -12.0 24.0 -130.0 | 0.12 0.01 0.12 | 1.0 0.6 0.2 1.0 | 1 0
+twin_platform: 0.0 24.0 -130.0 | 0.12 0.01 0.12 | 1.0 0.6 0.2 1.0 | 1 0
 
-# ORB 3 - combo mastered
-orb: -12.0 26.0 -130.0
+# [10b] CHECKPOINT - regular platform forward for safe respawn
+# Player lands on ghost, hops forward to checkpoint for orb
+platform: 0.0 24.5 -140.0 | 0.06 0.01 0.06 | 0.5 0.7 1.0 1.0
+
+# ORB 3 - combo mastered (above CHECKPOINT, safe location!)
+orb: 0.0 26.5 -140.0
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SECTION 4: FINALE - TWIN STAIRCASE (Y=24→32)
-# Big zigzag ascent with alternating twins
+# SECTION 4: WALL BOUNCE CORRIDOR (Y=24→35) **NEW**
+# Bounce between walls to move forward (Z) while ascending!
+# NO FLOOR - pure wall-to-wall action!
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# [11] ENTRY - same Z as ghost landing for easy transition
-# From GHOST: dist=12, gap=2✓, same Y
-platform: 0.0 24.0 -130.0 | 0.08 0.01 0.08 | 0.5 0.7 1.0 1.0
+# [W1] LEFT WALL - first bounce
+# From Ghost Landing: jump right toward this wall
+# Touch at Y≈26, pushed RIGHT, peak ~29.7
+platform: -5.0 26.0 -140.0 | 0.02 0.10 0.06 | 0.3 0.5 0.9 1.0
 
-# [12] TWIN-A (cyan) - left
-# From ENTRY: dist=16.2, gap=8.2✓, height +1✓
+# [W2] RIGHT WALL - second bounce
+# Touch at Y≈28, pushed LEFT, peak ~31.7
+platform: 5.0 28.0 -150.0 | 0.02 0.10 0.06 | 0.3 0.5 0.9 1.0
+
+# [W3] LEFT WALL - third bounce
+# Touch at Y≈30, pushed RIGHT, peak ~33.7
+platform: -5.0 30.0 -160.0 | 0.02 0.10 0.06 | 0.3 0.5 0.9 1.0
+
+# [W4] RIGHT WALL - fourth bounce
+# Touch at Y≈32, pushed LEFT, peak ~35.7
+platform: 5.0 32.0 -170.0 | 0.02 0.10 0.06 | 0.3 0.5 0.9 1.0
+
+# [11] BOUNCE LANDING - catch after final bounce
+platform: 0.0 34.0 -180.0 | 0.10 0.01 0.10 | 0.5 0.7 1.0 1.0
+
+# ORB 4 - wall bouncing mastered
+orb: 0.0 36.0 -180.0
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 5: TWIN WALLS (Y=35→50) **NEW**
+# Walls that TOGGLE like twin platforms!
+# Wall jump triggers toggle - land on wall that BECOMES solid mid-air!
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# [12] ENTRY - prepare for twin walls
+platform: 0.0 36.0 -190.0 | 0.08 0.01 0.08 | 0.5 0.7 1.0 1.0
+
+# [TW-LEFT] LEFT TWIN WALL - solid start (cyan)
 # Group 2, starts active
-twin_platform: -6.0 25.0 -145.0 | 0.08 0.01 0.08 | 0.2 0.9 0.9 1.0 | 2 1
+# Player jumps right toward this wall, triggers toggle
+twin_platform: 6.0 42.0 -200.0 | 0.02 0.12 0.06 | 0.2 0.9 0.9 1.0 | 2 1
 
-# [13] TWIN-B (orange) - right
-# From A: dist=19.2, gap=11.2✓, height +3✓
-# Group 2, starts ghost (solid after jump from A)
-twin_platform: 6.0 28.0 -160.0 | 0.08 0.01 0.08 | 1.0 0.6 0.2 1.0 | 2 0
+# [TW-RIGHT] RIGHT TWIN WALL - ghost start (orange)
+# Group 2, starts ghost - becomes solid when player wall-jumps off left!
+# Player pushed left from TW-LEFT lands here
+twin_platform: -6.0 46.0 -200.0 | 0.02 0.12 0.06 | 1.0 0.6 0.2 1.0 | 2 0
 
-# [14] TWIN-C (cyan) - left
-# From B: dist=19.2, gap=11.2✓, height +3✓
-# Group 2, starts active (toggles back after B)
-twin_platform: -6.0 31.0 -175.0 | 0.08 0.01 0.08 | 0.2 0.9 0.9 1.0 | 2 1
+# [13] EXIT - after double wall jump
+# Player pushed right from TW-RIGHT lands here
+platform: 8.0 48.0 -200.0 | 0.10 0.01 0.10 | 0.5 0.7 1.0 1.0
 
-# ORB 4 - FINAL ORB
-orb: -6.0 33.0 -175.0
+# ORB 5 - twin walls mastered
+orb: 8.0 50.0 -200.0
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 6: MOVING WALLS (Y=50→65) **NEW**
+# Walls that RISE upward - catch them before too high!
+# Creates urgency - hesitate and the wall escapes!
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# [14] APPROACH - prepare for the chase
+platform: 8.0 50.0 -220.0 | 0.08 0.01 0.08 | 0.5 0.7 1.0 1.0
+
+# [MW1] MOVING WALL 1 - slow rise from Y=52 to Y=64
+# Speed 0.15 = ~3.3 sec to reach top
+# Player must RUSH to catch it!
+moving_platform: -4.0 52.0 -230.0 | 0.02 0.12 0.06 | linear -4.0 64.0 -230.0 | 0.15 0.0
+
+# [15] MID-CATCH - landing after MW1 wall jump
+platform: 8.0 58.0 -230.0 | 0.08 0.01 0.08 | 0.5 0.7 1.0 1.0
+
+# [MW2] MOVING WALL 2 - faster rise from Y=58 to Y=70
+# Speed 0.20 = ~2.5 sec to reach top
+# Phase 0.5 = starts mid-cycle (descending then rising)
+moving_platform: 12.0 58.0 -240.0 | 0.02 0.12 0.06 | linear 12.0 70.0 -240.0 | 0.20 0.5
+
+# [16] FINALE - after MW2 wall jump
+platform: 0.0 64.0 -240.0 | 0.10 0.01 0.10 | 0.5 0.7 1.0 1.0
+
+# ORB 6 - moving walls mastered (FINAL ORB)
+orb: 0.0 66.0 -240.0
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # VICTORY PLATFORM
-# Golden celebration!
+# Golden celebration at Y=65 - DRAMATIC HEIGHT ACHIEVED!
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# [15] GOAL - big golden platform
-# From C: dist=16.2, gap=0.7✓, height +1✓
-platform: 0.0 32.0 -190.0 | 0.25 0.01 0.25 | 1.0 0.9 0.3 1.0
+# [17] GOAL - big golden platform
+platform: 0.0 65.0 -260.0 | 0.25 0.01 0.25 | 1.0 0.9 0.3 1.0

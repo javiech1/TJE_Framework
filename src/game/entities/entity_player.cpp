@@ -158,6 +158,17 @@ void EntityPlayer::applyPhysics(float delta_time)
         wall_jump_momentum_timer -= delta_time;
     }
 
+    // Update wall cling timer - keeps is_touching_wall true for input buffer
+    if (wall_cling_timer > 0.0f) {
+        wall_cling_timer -= delta_time;
+        // Wall cling allows wall jump even after leaving wall
+        // is_touching_wall was set in resolveCollisions, cling keeps it valid
+        if (wall_cling_timer > 0.0f && !is_touching_wall) {
+            // Note: wall_normal retained from last wall contact
+            is_touching_wall = true;
+        }
+    }
+
     // Process jump (ground jump OR wall jump)
     if (jump_requested) {
         if (is_grounded) {
@@ -437,6 +448,7 @@ void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
                     // Track wall contact for wall jumping
                     is_touching_wall = true;
                     wall_normal = push_direction;  // Points away from wall
+                    wall_cling_timer = WALL_CLING_TIME;  // Reset cling timer for input buffer
 
                     // Slide along wall - ONLY horizontal components
                     // This prevents the jump velocity from being amplified
@@ -457,6 +469,41 @@ void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
         }
 
         if (!collision_found) break;
+    }
+
+    // --- PROXIMITY-BASED WALL DETECTION (doesn't require penetration) ---
+    // This allows wall jump when sliding alongside walls, not just pushing into them
+    // Uses expanded radius to detect "near wall" state
+    if (!is_touching_wall) {
+        float proximity_radius = collision_radius * 1.2f;  // 20% larger for detection
+
+        for (Entity* entity : entities) {
+            EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
+            if (!platform) continue;
+            if (platform->isTwin() && !platform->isTwinActive()) continue;
+
+            Vector3 box_center = platform->model.getTranslation();
+            Vector3 box_half_size = platform->getHalfSize();
+
+            Vector3 closest_point;
+            float penetration;
+
+            if (sphereVsAABB(position, proximity_radius, box_center, box_half_size,
+                           closest_point, penetration)) {
+                Vector3 to_player = position - closest_point;
+                float dist = to_player.length();
+                if (dist > 0.001f) {
+                    to_player = to_player * (1.0f / dist);  // normalize
+                    // Only count as wall if horizontal (not ground/ceiling)
+                    if (fabs(to_player.y) < GROUND_NORMAL_THRESHOLD) {
+                        is_touching_wall = true;
+                        wall_normal = to_player;
+                        wall_cling_timer = WALL_CLING_TIME;
+                        break;  // Found a wall, stop searching
+                    }
+                }
+            }
+        }
     }
 
     // Sync model matrix with corrected position
