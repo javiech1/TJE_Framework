@@ -1,5 +1,6 @@
-# Tutorial Level - Progressive Difficulty (2-3 minutes)
-# All platforms white - NO reset slabs (falling resets to last orb)
+# Tutorial Level - STEEP DIFFICULTY (2-3 minutes)
+# Max horizontal jump: ~22 units | Max vertical jump: ~4.1 units
+# Gap formula: center_distance - (scale1*50) - (scale2*50) = gap
 
 name: Tutorial
 gravity: 9.8
@@ -8,126 +9,190 @@ music: data/audio/stellar_drift.mp3
 music_volume: 0.5
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SECTION 1: Basic Movement (Z=0 to -45)
-# Large platforms - learn to walk
+# SECTION 1: Basic Movement (Y=0 to 2) - EASY
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Start platform - large and safe (scale 0.20 = radius 10)
+# Start platform (scale 0.20 = radius 10)
 platform: 0.0 0.0 0.0 | 0.20 0.01 0.20 | 1.0 1.0 1.0 1.0
 
-# Second platform (scale 0.15 = radius 7.5) - small gap, can walk
-# Gap = 28 - 10 - 7.5 = 10.5 units (comfortable walk/small jump)
+# Second platform (scale 0.15 = radius 7.5)
+# Distance: 28, gap = 28 - 10 - 7.5 = 10.5 ✓
 platform: 0.0 0.0 -28.0 | 0.15 0.01 0.15 | 1.0 1.0 1.0 1.0
 
 orb: 0.0 2.0 -28.0
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SECTION 2: Simple Jumps (Z=-50 to -110)
-# Smaller platforms - MUST jump
+# SECTION 2: Vertical Staircase Climb (Y=0 to 10) - MODERATE
+# Each step: ~2.5 units up (max is 4.1)
 # ═══════════════════════════════════════════════════════════════════════════
 
-# First jump platform (scale 0.10 = radius 5)
-# From Z=-28 (radius 7.5): gap = 50 - 28 - 7.5 - 5 = 9.5 units
-platform: 0.0 0.5 -50.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
+# Step 1 (scale 0.10 = radius 5)
+# From Z=-28 (r=7.5): distance=18, gap = 18 - 7.5 - 5 = 5.5 ✓
+platform: 0.0 2.0 -46.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
 
-# Diagonal jump right - gap ~12 units
-platform: 6.0 1.0 -68.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
+# Step 2 - diagonal right (scale 0.10 = radius 5)
+# 3D distance: sqrt(6² + 14²) = 15.2, gap = 15.2 - 5 - 5 = 5.2 ✓
+# Height: +2.5 (within 4.1 max)
+platform: 6.0 4.5 -60.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
 
-# Back to center - gap ~12 units
-platform: 0.0 1.5 -86.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
+# Step 3 - diagonal left (scale 0.10 = radius 5)
+# 3D: sqrt(12² + 14²) = 18.4, gap = 18.4 - 5 - 5 = 8.4 ✓
+# Height: +2.5
+platform: -6.0 7.0 -74.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
 
-# Diagonal jump left - gap ~12 units
-platform: -6.0 2.0 -104.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
+# Step 4 - back to center (scale 0.10 = radius 5)
+# 3D: sqrt(6² + 14²) = 15.2, gap = 15.2 - 5 - 5 = 5.2 ✓
+# Height: +3 (near max!)
+platform: 0.0 10.0 -88.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
 
-orb: -6.0 4.0 -104.0
-
-# ═══════════════════════════════════════════════════════════════════════════
-# SECTION 3: Moving Platforms Intro (Z=-120 to -180)
-# Slow moving platforms - learn timing
-# ═══════════════════════════════════════════════════════════════════════════
-
-# Safe landing platform (scale 0.12 = radius 6)
-# From Z=-104: gap = 122 - 104 - 5 - 6 = 7 units
-platform: 0.0 2.5 -122.0 | 0.12 0.01 0.12 | 1.0 1.0 1.0 1.0
-
-# Linear platform moving left-right (scale 0.10 = radius 5)
-# Gap ~12 units at center position
-moving_platform: -4.0 3.0 -145.0 | 0.10 0.01 0.10 | linear 4.0 3.0 -145.0 | 0.25 0.0
-
-# Static landing after moving platform
-# Gap ~12 units
-platform: 0.0 3.5 -168.0 | 0.12 0.01 0.12 | 1.0 1.0 1.0 1.0
-
-# Circular platform (slow orbit, radius 3)
-# Center at Z=-188, orbits from Z=-185 to Z=-191
-moving_platform: 0.0 4.0 -188.0 | 0.10 0.01 0.10 | circular 3.0 | 0.4 0.0
-
-orb: 0.0 6.0 -188.0
+orb: 0.0 12.0 -88.0
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SECTION 4: Obstacles Intro (Z=-205 to -245)
-# Static platforms with moving red obstacle - learn avoidance
-# Gap ~15 units with obstacle in between
+# SECTION 3: Moving Platforms - HARD STARTS HERE (Y=10 to 18)
+# Smaller platforms (0.08 = radius 4) + timing
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Safe platform (scale 0.12 = radius 6)
-# From circular at ~Z=-191: gap = 208 - 191 - 5 - 6 = 6 units
-platform: 0.0 4.5 -208.0 | 0.12 0.01 0.12 | 1.0 1.0 1.0 1.0
+# Landing (scale 0.08 = radius 4)
+# Z distance: 16, gap = 16 - 5 - 4 = 7 ✓
+platform: 0.0 10.5 -104.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
 
-# Target platform - gap = 238 - 208 - 6 - 6 = 18 units (challenging but possible!)
-platform: 0.0 5.0 -238.0 | 0.12 0.01 0.12 | 1.0 1.0 1.0 1.0
+# Linear moving platform (scale 0.08 = radius 4)
+# Z distance: 16, gap = 16 - 4 - 4 = 8 ✓
+moving_platform: -4.0 11.0 -120.0 | 0.08 0.01 0.08 | linear 4.0 11.0 -120.0 | 0.4 0.0
 
-# Obstacle sweeping horizontally between platforms (must time jump)
-obstacle: 0.0 5.8 -223.0 | 0.02 0.06 0.15 | linear -6.0 5.8 -223.0 6.0 5.8 -223.0 | 0.5
+# Tiny landing (scale 0.06 = radius 3)
+# Z distance: 14, gap = 14 - 4 - 3 = 7 ✓
+platform: 0.0 11.5 -134.0 | 0.06 0.01 0.06 | 1.0 1.0 1.0 1.0
 
-orb: 0.0 7.0 -238.0
+# Vertical moving platform (scale 0.08 = radius 4)
+# Z distance: 14, gap = 14 - 3 - 4 = 7 ✓
+moving_platform: 0.0 12.0 -148.0 | 0.08 0.01 0.08 | linear 0.0 15.0 -148.0 | 0.35 0.0
 
-# ═══════════════════════════════════════════════════════════════════════════
-# SECTION 5: Combination (Z=-258 to -320)
-# Moving platforms AND obstacles together
-# ═══════════════════════════════════════════════════════════════════════════
+# Landing at height 16 (scale 0.08 = radius 4)
+# Z distance: 14, gap = 14 - 4 - 4 = 6 ✓
+platform: 0.0 16.0 -162.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
 
-# Entry platform - gap = 258 - 238 - 6 - 6 = 8 units
-platform: 0.0 5.5 -258.0 | 0.12 0.01 0.12 | 1.0 1.0 1.0 1.0
+# Circular platform (scale 0.08 = radius 4, orbit radius 3)
+# Z distance: 18, gap at closest = 18 - 4 - 4 = 10 ✓
+moving_platform: 0.0 16.5 -180.0 | 0.08 0.01 0.08 | circular 3.0 | 0.5 0.0
 
-# Vertical moving platform (goes up and down) - gap ~15 units
-moving_platform: 0.0 6.0 -283.0 | 0.10 0.01 0.10 | linear 0.0 8.0 -283.0 | 0.35 0.0
-
-# Obstacle near the vertical platform
-obstacle: 4.0 7.0 -283.0 | 0.12 0.05 0.02 | linear 4.0 5.5 -283.0 4.0 8.5 -283.0 | 0.5
-
-# Landing platform - gap ~15 units
-platform: -2.0 8.5 -308.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
-
-# Circular platform with circular obstacle
-moving_platform: 0.0 9.0 -333.0 | 0.10 0.01 0.10 | circular 3.0 | 0.5 0.0
-obstacle: 0.0 10.0 -333.0 | 0.02 0.06 0.02 | circular 0.0 10.0 -333.0 2.0 | 0.6
-
-orb: 0.0 11.0 -333.0
+orb: 0.0 18.5 -180.0
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SECTION 6: Final Challenge (Z=-353 to -420)
-# Fast circular platforms - the gauntlet!
+# SECTION 4: Obstacle Gauntlet (Y=17 to 22) - HARDER
+# 4 obstacles in sequence
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Entry platform - gap ~15 units from circular
-platform: 0.0 9.5 -358.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
+# Entry (scale 0.10 = radius 5)
+# Z distance: 18, gap = 18 - 4 - 5 = 9 ✓
+platform: 0.0 17.0 -198.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
 
-# Gauntlet of 3 circular platforms with phase offsets
-# Each 20 units apart (gap ~10 at closest orbit points)
-moving_platform: 0.0 10.0 -383.0 | 0.08 0.01 0.08 | circular 3.0 | 0.55 0.0
-moving_platform: 0.0 10.5 -403.0 | 0.08 0.01 0.08 | circular 3.0 | 0.55 2.09
-moving_platform: 0.0 11.0 -423.0 | 0.08 0.01 0.08 | circular 3.0 | 0.55 4.18
+# Obstacle 1 - horizontal sweep
+obstacle: 0.0 17.8 -210.0 | 0.02 0.04 0.15 | linear -6.0 17.8 -210.0 6.0 17.8 -210.0 | 0.6
 
-# Obstacles on the sides (creates corridor - but not blocking jumps)
-obstacle: -6.0 10.5 -393.0 | 0.01 0.12 0.20 | linear -6.0 9.0 -393.0 -6.0 12.0 -393.0 | 0.5
-obstacle: 6.0 10.5 -413.0 | 0.01 0.12 0.20 | linear 6.0 9.0 -413.0 6.0 12.0 -413.0 | 0.5
+# Platform 2 (scale 0.08 = radius 4)
+# Z distance: 22, gap = 22 - 5 - 4 = 13 ✓
+platform: 0.0 17.5 -220.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
 
-orb: 0.0 13.0 -423.0
+# Obstacle 2 - high horizontal sweep
+obstacle: 0.0 18.5 -232.0 | 0.02 0.06 0.15 | linear 6.0 18.5 -232.0 -6.0 18.5 -232.0 | 0.7
+
+# Platform 3 (scale 0.08 = radius 4)
+# Z distance: 22, gap = 22 - 4 - 4 = 14 ✓
+platform: 0.0 18.0 -242.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
+
+# Obstacle 3 - vertical sweep
+obstacle: 0.0 19.0 -254.0 | 0.12 0.04 0.02 | linear 0.0 17.0 -254.0 0.0 21.0 -254.0 | 0.5
+
+# Platform 4 - dodge right (scale 0.08 = radius 4)
+# 3D: sqrt(5² + 20²) = 20.6, gap = 20.6 - 4 - 4 = 12.6 ✓
+platform: 5.0 18.5 -262.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
+
+# Obstacle 4 - circular
+obstacle: 0.0 19.5 -274.0 | 0.02 0.05 0.02 | circular 0.0 19.5 -274.0 2.5 | 0.7
+
+# Exit platform (scale 0.10 = radius 5)
+# 3D: sqrt(5² + 18²) = 18.7, gap = 18.7 - 4 - 5 = 9.7 ✓
+platform: 0.0 20.0 -280.0 | 0.10 0.01 0.10 | 1.0 1.0 1.0 1.0
+
+orb: 0.0 22.0 -280.0
 
 # ═══════════════════════════════════════════════════════════════════════════
-# GOAL PLATFORM - Victory!
+# SECTION 5: Descent of Doom (Y=20 down to 14) - INTENSE
+# Falling through obstacles
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Final large platform - gap ~15 units from last circular
-platform: 0.0 12.0 -453.0 | 0.25 0.01 0.25 | 1.0 1.0 1.0 1.0
+# Drop start (scale 0.08 = radius 4)
+# Z distance: 16, gap = 16 - 5 - 4 = 7 ✓
+platform: 0.0 20.0 -296.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
+
+# Obstacle sweep during drop
+obstacle: 0.0 18.0 -308.0 | 0.18 0.03 0.02 | linear -5.0 18.0 -308.0 5.0 18.0 -308.0 | 0.8
+
+# Mid-drop platform (scale 0.08 = radius 4)
+# Z distance: 18, gap = 18 - 4 - 4 = 10 ✓ (falling down, so height doesn't limit)
+platform: 0.0 16.0 -314.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
+
+# Moving platform during descent (scale 0.08 = radius 4)
+# Z distance: 16, gap = 16 - 4 - 4 = 8 ✓
+moving_platform: 3.0 14.5 -330.0 | 0.08 0.01 0.08 | linear -3.0 14.5 -330.0 | 0.5 0.0
+
+# Obstacle crossing descent path
+obstacle: 0.0 15.0 -330.0 | 0.02 0.06 0.08 | linear 0.0 13.0 -330.0 0.0 17.0 -330.0 | 0.6
+
+# Final descent landing (scale 0.08 = radius 4)
+# Z distance: 16, gap = 16 - 4 - 4 = 8 ✓
+platform: 0.0 14.0 -346.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
+
+orb: 0.0 16.0 -346.0
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECTION 6: Final Ascent - THE GAUNTLET (Y=14 to 26) - MAXIMUM
+# Everything combined
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Entry (scale 0.08 = radius 4)
+# Z distance: 16, gap = 16 - 4 - 4 = 8 ✓
+platform: 0.0 14.5 -362.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
+
+# Layer 1 - circular with orbiting obstacle (scale 0.06 = radius 3, orbit 3)
+# Z distance: 16, gap at closest = 16 - 4 - 3 = 9 ✓
+moving_platform: 0.0 16.0 -378.0 | 0.06 0.01 0.06 | circular 3.0 | 0.55 0.0
+obstacle: 0.0 17.0 -378.0 | 0.02 0.04 0.02 | circular 0.0 17.0 -378.0 2.0 | 0.8
+
+# Layer 2 - vertical moving (scale 0.06 = radius 3)
+# Z distance: 16, gap = 16 - 3 - 3 = 10 ✓
+moving_platform: 0.0 18.0 -394.0 | 0.06 0.01 0.06 | linear 0.0 21.0 -394.0 | 0.45 0.0
+obstacle: 0.0 19.5 -394.0 | 0.15 0.02 0.02 | linear -4.0 19.5 -394.0 4.0 19.5 -394.0 | 0.75
+
+# Layer 3 - two offset circular platforms (scale 0.06 = radius 3, orbit 2.5)
+# Must jump between them!
+# Z distance: 16, gap at closest = 16 - 3 - 3 = 10 ✓
+moving_platform: -2.5 22.0 -410.0 | 0.06 0.01 0.06 | circular 2.5 | 0.6 0.0
+moving_platform: 2.5 22.5 -410.0 | 0.06 0.01 0.06 | circular 2.5 | 0.6 3.14
+
+# Vertical obstacle walls
+obstacle: -5.0 22.5 -410.0 | 0.01 0.08 0.12 | linear -5.0 20.0 -410.0 -5.0 25.0 -410.0 | 0.55
+obstacle: 5.0 22.5 -410.0 | 0.01 0.08 0.12 | linear 5.0 20.0 -410.0 5.0 25.0 -410.0 | 0.55
+
+# Layer 4 - tiny fast platforms (scale 0.06 = radius 3, orbit 2.5)
+# Z distance: 16, gap at closest = 16 - 3 - 3 = 10 ✓
+moving_platform: 0.0 24.0 -426.0 | 0.06 0.01 0.06 | circular 2.5 | 0.7 0.0
+
+# Double sweep obstacles
+obstacle: 0.0 25.0 -438.0 | 0.02 0.05 0.12 | linear -5.0 25.0 -438.0 5.0 25.0 -438.0 | 0.85
+obstacle: 0.0 25.8 -438.0 | 0.02 0.05 0.12 | linear 5.0 25.8 -438.0 -5.0 25.8 -438.0 | 0.85
+
+# Final platform before goal (scale 0.08 = radius 4)
+# Z distance: 18, gap = 18 - 3 - 4 = 11 ✓
+platform: 0.0 25.5 -444.0 | 0.08 0.01 0.08 | 1.0 1.0 1.0 1.0
+
+orb: 0.0 27.5 -444.0
+
+# ═══════════════════════════════════════════════════════════════════════════
+# GOAL PLATFORM - Victory at 26 units high!
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Goal (scale 0.25 = radius 12.5)
+# Z distance: 22, gap = 22 - 4 - 12.5 = 5.5 ✓
+platform: 0.0 26.0 -466.0 | 0.25 0.01 0.25 | 1.0 1.0 1.0 1.0

@@ -99,8 +99,7 @@ void Game::render(void)
 		current_stage->render(camera);
 	}
 
-	// Draw the floor grid - DEBUG
-	drawGrid();
+	// Debug grid removed - was showing on menu
 	// Render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
 

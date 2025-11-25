@@ -45,7 +45,13 @@ void EntityPlatform::render(Camera* camera)
 
 void EntityPlatform::update(float delta_time)
 {
-    if (movement_type == MovementType::NONE) return;
+    if (movement_type == MovementType::NONE) {
+        current_velocity = Vector3(0, 0, 0);
+        return;
+    }
+
+    // Store last position for velocity calculation
+    last_position = model.getTranslation();
 
     movement_time += delta_time;
     Vector3 new_pos;
@@ -69,6 +75,11 @@ void EntityPlatform::update(float delta_time)
         new_pos.x = center_position.x + cos(angle) * orbit_radius;
         new_pos.y = center_position.y;
         new_pos.z = center_position.z + sin(angle) * orbit_radius;
+    }
+
+    // Calculate velocity (displacement / time)
+    if (delta_time > 0.0001f) {
+        current_velocity = (new_pos - last_position) * (1.0f / delta_time);
     }
 
     // Update position while preserving scale

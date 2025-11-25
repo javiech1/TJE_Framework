@@ -148,6 +148,7 @@ void EntityPlayer::applyPhysics(float delta_time)
         if (is_grounded) {
             velocity.y = jump_velocity;
             is_grounded = false;
+            ground_platform = nullptr;  // Clear platform reference on jump
             std::cout << "JUMP! velocity.y = " << velocity.y << std::endl;
         }
         jump_requested = false;
@@ -168,6 +169,12 @@ void EntityPlayer::applyPhysics(float delta_time)
     // Update position with velocity
     // Don't touch model matrix here - updateModelMatrix() will rebuild it properly
     position += velocity * delta_time;
+
+    // Apply moving platform carry - move with the platform
+    if (is_grounded && ground_platform) {
+        Vector3 platform_vel = ground_platform->getVelocity();
+        position += platform_vel * delta_time;
+    }
 }
 
 void EntityPlayer::setScale(float scale)
@@ -195,13 +202,15 @@ void EntityPlayer::updateModelMatrix()
 // ============================================================================
 // detectGround() - Updates is_grounded state BEFORE physics
 // Called BEFORE applyPhysics() so friction/jumping work correctly
+// Also tracks which platform we're standing on for platform carry
 // ============================================================================
 void EntityPlayer::detectGround(const std::vector<Entity*>& entities)
 {
     float collision_radius = player_scale * COLLISION_RADIUS_MULT;
 
-    // Reset grounded state
+    // Reset grounded state and platform reference
     is_grounded = false;
+    ground_platform = nullptr;
 
     Vector3 ray_dir(0, -1, 0);  // Straight down
     float ray_distance = collision_radius * 1.5f;
@@ -226,6 +235,27 @@ void EntityPlayer::detectGround(const std::vector<Entity*>& entities)
                                     eCollisionFilter::FLOOR, true, ray_distance)) {
             if(ground_hit.collided && ground_hit.distance <= ray_distance) {
                 is_grounded = true;
+
+                // Try to find which platform we're standing on
+                for (Entity* entity : entities) {
+                    EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
+                    if (platform && platform->isMoving()) {
+                        // Check if this platform is under us
+                        Vector3 plat_pos = platform->getCurrentPosition();
+                        Vector3 plat_half = platform->getHalfSize();
+                        float plat_top = plat_pos.y + plat_half.y;
+
+                        // Check if player is approximately on top of this platform
+                        bool on_x = fabs(position.x - plat_pos.x) < plat_half.x + collision_radius;
+                        bool on_z = fabs(position.z - plat_pos.z) < plat_half.z + collision_radius;
+                        bool on_y = fabs(position.y - collision_radius - plat_top) < 0.5f;
+
+                        if (on_x && on_z && on_y) {
+                            ground_platform = platform;
+                            break;
+                        }
+                    }
+                }
                 break; // Found ground
             }
         }

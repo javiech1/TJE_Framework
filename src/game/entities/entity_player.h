@@ -3,6 +3,7 @@
 
 class Camera;
 class World;
+class EntityPlatform;
 
 class EntityPlayer : public EntityMesh {
     private:
@@ -22,6 +23,7 @@ class EntityPlayer : public EntityMesh {
         float current_yaw;      // Current rotation angle (radians)
         float target_yaw;       // Target rotation angle (radians)
         World* world;           // Reference to world for gravity
+        EntityPlatform* ground_platform = nullptr;  // Platform we're standing on (for carry)
 
         // Collision constants
         static constexpr float GROUND_NORMAL_THRESHOLD = 0.7f; // Normal.y threshold to consider surface as ground

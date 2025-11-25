@@ -23,6 +23,9 @@ class EntityPlatform : public EntityCollider {
         float movement_time = 0.0f;  // Elapsed time
         float movement_phase = 0.0f; // Starting phase
 
+        Vector3 last_position;       // For velocity calculation
+        Vector3 current_velocity;    // Platform velocity this frame
+
     public:
         Texture* texture = nullptr;
         Shader* shader = nullptr;
@@ -41,5 +44,7 @@ class EntityPlatform : public EntityCollider {
         void setLinearMovement(const Vector3& start, const Vector3& end, float speed, float phase = 0.0f);
         void setCircularMovement(const Vector3& center, float radius, float speed, float phase = 0.0f);
         Vector3 getCurrentPosition() const;
+        Vector3 getVelocity() const { return current_velocity; }
+        bool isMoving() const { return movement_type != MovementType::NONE; }
 };
   
