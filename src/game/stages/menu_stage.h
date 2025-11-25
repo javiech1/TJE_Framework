@@ -27,7 +27,6 @@ private:
     // Menu state
     enum MenuOption {
         MENU_START_GAME,
-        MENU_OPTIONS,
         MENU_QUIT,
         MENU_COUNT
     };

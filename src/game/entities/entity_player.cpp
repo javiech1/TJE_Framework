@@ -272,31 +272,74 @@ void EntityPlayer::detectGround(const std::vector<Entity*>& entities)
         if(Collision::TestSceneRay(entities, ray_origin, ray_dir, ground_hit,
                                     eCollisionFilter::FLOOR, true, ray_distance)) {
             if(ground_hit.collided && ground_hit.distance <= ray_distance) {
-                is_grounded = true;
+                // DON'T set is_grounded yet! First find which platform we hit
+                // and check if it's a ghost twin (which shouldn't count as ground)
 
-                // Try to find which platform we're standing on
+                EntityPlatform* hit_platform = nullptr;
                 for (Entity* entity : entities) {
                     EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
-                    // Skip inactive twin platforms
-                    if (platform && platform->isTwin() && !platform->isTwinActive()) continue;
-                    if (platform && platform->isMoving()) {
-                        // Check if this platform is under us
-                        Vector3 plat_pos = platform->getCurrentPosition();
+                    if (!platform) continue;
+
+                    Vector3 plat_pos = platform->model.getTranslation();
+                    Vector3 plat_half = platform->getHalfSize();
+
+                    // Check if the hit point is within this platform's bounds (with tolerance)
+                    bool in_x = ground_hit.col_point.x >= plat_pos.x - plat_half.x - 0.1f &&
+                                ground_hit.col_point.x <= plat_pos.x + plat_half.x + 0.1f;
+                    bool in_z = ground_hit.col_point.z >= plat_pos.z - plat_half.z - 0.1f &&
+                                ground_hit.col_point.z <= plat_pos.z + plat_half.z + 0.1f;
+                    bool near_y = fabs(ground_hit.col_point.y - (plat_pos.y + plat_half.y)) < 0.2f;
+
+                    if (in_x && in_z && near_y) {
+                        hit_platform = platform;
+                        break;
+                    }
+                }
+
+                // Skip ghost twin platforms - they're not real ground!
+                if (hit_platform && hit_platform->isTwin() && !hit_platform->isTwinActive()) {
+                    continue;  // Try next ray offset, this one hit a ghost
+                }
+
+                // SECONDARY CHECK: If we couldn't identify the platform, check if ANY ghost twin
+                // contains the hit point (handles wall-shaped platforms where bounds check fails)
+                if (!hit_platform) {
+                    bool hit_ghost = false;
+                    for (Entity* entity : entities) {
+                        EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
+                        if (!platform) continue;
+                        if (!platform->isTwin() || platform->isTwinActive()) continue;  // Only check ghosts
+
+                        Vector3 plat_pos = platform->model.getTranslation();
                         Vector3 plat_half = platform->getHalfSize();
-                        float plat_top = plat_pos.y + plat_half.y;
 
-                        // Check if player is approximately on top of this platform
-                        bool on_x = fabs(position.x - plat_pos.x) < plat_half.x + collision_radius;
-                        bool on_z = fabs(position.z - plat_pos.z) < plat_half.z + collision_radius;
-                        bool on_y = fabs(position.y - collision_radius - plat_top) < 0.5f;
+                        // Expanded bounds check for ghost detection
+                        bool in_x = ground_hit.col_point.x >= plat_pos.x - plat_half.x - 0.5f &&
+                                    ground_hit.col_point.x <= plat_pos.x + plat_half.x + 0.5f;
+                        bool in_z = ground_hit.col_point.z >= plat_pos.z - plat_half.z - 0.5f &&
+                                    ground_hit.col_point.z <= plat_pos.z + plat_half.z + 0.5f;
+                        bool in_y = ground_hit.col_point.y >= plat_pos.y - plat_half.y - 0.5f &&
+                                    ground_hit.col_point.y <= plat_pos.y + plat_half.y + 0.5f;
 
-                        if (on_x && on_z && on_y) {
-                            ground_platform = platform;
+                        if (in_x && in_z && in_y) {
+                            hit_ghost = true;
                             break;
                         }
                     }
+                    if (hit_ghost) {
+                        continue;  // Skip this ray, it hit a ghost
+                    }
                 }
-                break; // Found ground
+
+                // Valid ground found!
+                is_grounded = true;
+
+                // Store moving platform for carry
+                if (hit_platform && hit_platform->isMoving()) {
+                    ground_platform = hit_platform;
+                }
+
+                break; // Found valid ground
             }
         }
     }
@@ -335,6 +378,62 @@ void EntityPlayer::resolveCollisions(const std::vector<Entity*>& entities)
         if(Collision::TestSceneRay(entities, ray_origin, ray_dir, ground_hit,
                                     eCollisionFilter::FLOOR, true, ray_distance)) {
             if(ground_hit.collided && ground_hit.distance <= ray_distance) {
+                // Find which platform we hit - check for ghost twins
+                EntityPlatform* hit_platform = nullptr;
+                for (Entity* entity : entities) {
+                    EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
+                    if (!platform) continue;
+
+                    Vector3 plat_pos = platform->model.getTranslation();
+                    Vector3 plat_half = platform->getHalfSize();
+
+                    bool in_x = ground_hit.col_point.x >= plat_pos.x - plat_half.x - 0.1f &&
+                                ground_hit.col_point.x <= plat_pos.x + plat_half.x + 0.1f;
+                    bool in_z = ground_hit.col_point.z >= plat_pos.z - plat_half.z - 0.1f &&
+                                ground_hit.col_point.z <= plat_pos.z + plat_half.z + 0.1f;
+                    bool near_y = fabs(ground_hit.col_point.y - (plat_pos.y + plat_half.y)) < 0.2f;
+
+                    if (in_x && in_z && near_y) {
+                        hit_platform = platform;
+                        break;
+                    }
+                }
+
+                // Skip ghost twin platforms - don't snap to them!
+                if (hit_platform && hit_platform->isTwin() && !hit_platform->isTwinActive()) {
+                    continue;  // Try next ray offset
+                }
+
+                // SECONDARY CHECK: If we couldn't identify the platform, check if ANY ghost twin
+                // contains the hit point (handles wall-shaped platforms where bounds check fails)
+                if (!hit_platform) {
+                    bool hit_ghost = false;
+                    for (Entity* entity : entities) {
+                        EntityPlatform* platform = dynamic_cast<EntityPlatform*>(entity);
+                        if (!platform) continue;
+                        if (!platform->isTwin() || platform->isTwinActive()) continue;  // Only check ghosts
+
+                        Vector3 plat_pos = platform->model.getTranslation();
+                        Vector3 plat_half = platform->getHalfSize();
+
+                        // Expanded bounds check for ghost detection
+                        bool in_x = ground_hit.col_point.x >= plat_pos.x - plat_half.x - 0.5f &&
+                                    ground_hit.col_point.x <= plat_pos.x + plat_half.x + 0.5f;
+                        bool in_z = ground_hit.col_point.z >= plat_pos.z - plat_half.z - 0.5f &&
+                                    ground_hit.col_point.z <= plat_pos.z + plat_half.z + 0.5f;
+                        bool in_y = ground_hit.col_point.y >= plat_pos.y - plat_half.y - 0.5f &&
+                                    ground_hit.col_point.y <= plat_pos.y + plat_half.y + 0.5f;
+
+                        if (in_x && in_z && in_y) {
+                            hit_ghost = true;
+                            break;
+                        }
+                    }
+                    if (hit_ghost) {
+                        continue;  // Skip this ray, it hit a ghost
+                    }
+                }
+
                 is_grounded = true;
 
                 float ground_y = ground_hit.col_point.y + collision_radius;
