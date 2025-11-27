@@ -140,10 +140,12 @@ void World::onKeyDown(SDL_KeyboardEvent event)
 
 void World::onKeyUp(SDL_KeyboardEvent event)
 {
+    // Implementar si se necesita
 }
 
 void World::onMouseMove(SDL_MouseMotionEvent event)
 {
+    // Implementar si se necesita
 }
 
 Vector3 World::getPlayerPosition() const {

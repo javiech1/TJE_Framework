@@ -9,6 +9,14 @@
 
 #include "framework/includes.h"
 
+// Para cambiar el directorio de trabajo (multiplataforma)
+#ifdef WIN32
+#include <direct.h>
+#define chdir _chdir
+#else
+#include <unistd.h>
+#endif
+
 #include "framework/framework.h"
 #include "graphics/mesh.h"
 #include "framework/camera.h"
@@ -181,6 +189,14 @@ int main(int argc, char **argv)
 
 	//prepare SDL
 	SDL_Init(SDL_INIT_EVERYTHING);
+
+	// Cambiar al directorio del ejecutable para que las rutas relativas funcionen
+	// (necesario cuando se ejecuta desde Finder en macOS o explorer en Windows)
+	char* base_path = SDL_GetBasePath();
+	if (base_path) {
+		chdir(base_path);
+		SDL_free(base_path);
+	}
 
 	bool fullscreen = false; //change this to go fullscreen
 	Vector2 size(800,600);

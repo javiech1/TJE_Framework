@@ -9,8 +9,6 @@
 #include <cmath>
 #include <algorithm>
 
-float mouse_speed = 100.0f;
-
 Game* Game::instance = NULL;
 
 Game::Game(int window_width, int window_height, SDL_Window* window)
@@ -131,21 +129,24 @@ void Game::onMouseButtonDown( SDL_MouseButtonEvent event )
 	}
 }
 
-void Game::onMouseButtonUp(SDL_MouseButtonEvent event)
+void Game::onMouseButtonUp( SDL_MouseButtonEvent event )
 {
+	// Implementar si se necesita
 }
 
-void Game::onMouseWheel(SDL_MouseWheelEvent event)
+void Game::onMouseWheel( SDL_MouseWheelEvent event )
 {
-	mouse_speed *= event.y > 0 ? 1.1f : 0.9f;
+	// Implementar si se necesita
 }
 
-void Game::onGamepadButtonDown(SDL_JoyButtonEvent event)
+void Game::onGamepadButtonDown( SDL_JoyButtonEvent event )
 {
+	// Implementar si se necesita
 }
 
-void Game::onGamepadButtonUp(SDL_JoyButtonEvent event)
+void Game::onGamepadButtonUp( SDL_JoyButtonEvent event )
 {
+	// Implementar si se necesita
 }
 
 void Game::onResize(int width, int height)
