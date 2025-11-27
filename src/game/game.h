@@ -7,6 +7,7 @@
 #include "framework/includes.h"
 #include "framework/camera.h"
 #include "framework/utils.h"
+#include "framework/entities/entity.h"
 
 class Game
 {
@@ -28,6 +29,7 @@ public:
 	//some vars
 	Camera* camera; //our global camera
 	bool mouse_locked; //tells if the mouse is locked (not seen)
+	Entity* root = nullptr; //scene root entity
 
 	Game( int window_width, int window_height, SDL_Window* window );
 
